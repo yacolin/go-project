@@ -27,3 +27,31 @@ func GenerateToken(userID uint) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(configs.JwtSecret)
 }
+
+/**
+ * 生成访问令牌
+ * @param userID 用户ID
+ * @return 访问令牌
+ */
+func GenerateAccessToken(userID uint) (string, error) {
+	claims := jwt.MapClaims{
+		"user_id": userID,
+		"exp":     time.Now().Add(15 * time.Minute).Unix(), // access token 15分钟过期
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(configs.JwtSecret)
+}
+
+/**
+ * 生成刷新令牌
+ * @param userID 用户ID
+ * @return 刷洗令牌
+ */
+func GenerateRefreshToken(userID uint) (string, error) {
+	claims := jwt.MapClaims{
+		"user_id": userID,
+		"exp":     time.Now().Add(7 * 24 * time.Hour).Unix(), // refresh token 7天过期
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(configs.JwtSecret)
+}

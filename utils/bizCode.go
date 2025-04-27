@@ -35,6 +35,8 @@ const (
 
 	// 令牌错误 (4300-4399)
 	ErrorTokenGenFailed             = 4300 + iota // 生成token失败
+	ErrorAccessTokenGenFailed                     // 生成AccessToken失败
+	ErrorRefreshTokenGenFailed                    // 生成RefreshToken失败
 	ErrorTokenInvalid                             // 无效的token
 	ErrorTokenExpired                             // token已过期
 	ErrorTokenNotFound                            // token不存在
@@ -89,6 +91,8 @@ var CodeMessages = map[int]string{
 	ErrorDataNotFound:           "数据不存在",
 
 	ErrorTokenGenFailed:             "生成token失败",
+	ErrorAccessTokenGenFailed:       "生成AccessToken失败",
+	ErrorRefreshTokenGenFailed:      "生成RefreshToken失败",
 	ErrorTokenInvalid:               "无效的token",
 	ErrorTokenExpired:               "token已过期",
 	ErrorTokenNotFound:              "token不存在",

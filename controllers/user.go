@@ -8,6 +8,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v5"
 )
 
 func Login(c *gin.Context) {
@@ -44,18 +45,42 @@ func Login(c *gin.Context) {
 	}
 
 	// 生成Token
-	token, err := utils.GenerateToken(user.ID)
+	// token, err := utils.GenerateToken(user.ID)
+	// if err != nil {
+	// 	c.Error(utils.NewBusinessError(
+	// 		utils.ErrorBadRequest,
+	// 		http.StatusBadRequest,
+	// 		gin.H{"error": utils.CodeMessages[utils.ErrorTokenGenFailed]},
+	// 		fmt.Errorf("生成token失败：%w", err),
+	// 	))
+	// 	return
+	// }
+	// utils.Success(c, http.StatusOK, utils.OK, gin.H{"token": token})
+
+	// 生成accessToken
+	accessToken, err := utils.GenerateAccessToken(user.ID)
 	if err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorBadRequest,
-			http.StatusBadRequest,
-			gin.H{"error": utils.CodeMessages[utils.ErrorTokenGenFailed]},
-			fmt.Errorf("生成token失败：%w", err),
+			utils.ErrorInternal,
+			http.StatusInternalServerError,
+			gin.H{"error": utils.CodeMessages[utils.ErrorAccessTokenGenFailed]},
+			fmt.Errorf("生成accessToken失败：%w", err),
 		))
 		return
 	}
 
-	utils.Success(c, http.StatusOK, utils.OK, gin.H{"token": token})
+	refreshToken, err := utils.GenerateRefreshToken(user.ID)
+	if err != nil {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorInternal,
+			http.StatusInternalServerError,
+			gin.H{"error": utils.CodeMessages[utils.ErrorRefreshTokenGenFailed]},
+			fmt.Errorf("生成refreshToken失败：%w", err),
+		))
+		return
+	}
+
+	utils.Success(c, http.StatusOK, utils.OK, gin.H{"access_token": accessToken, "refresh_token": refreshToken})
 }
 
 func Register(c *gin.Context) {
@@ -111,4 +136,68 @@ func Register(c *gin.Context) {
 	}
 
 	utils.Success(c, http.StatusOK, utils.OK, nil)
+}
+
+func Refresh(c *gin.Context) {
+	var input models.RefreshInput
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorBadRequest,
+			http.StatusBadRequest,
+			gin.H{"refresh": utils.FormatValidationErrors(err)},
+			fmt.Errorf("参数错误：%w", err),
+		))
+	}
+
+	// 解析 refresh token
+	token, err := jwt.Parse(input.RefreshToken, func(token *jwt.Token) (interface{}, error) {
+		return configs.JwtSecret, nil
+	})
+
+	if err != nil || !token.Valid {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorUnauthorized,
+			http.StatusUnauthorized,
+			gin.H{"error": utils.CodeMessages[utils.ErrorTokenInvalid]},
+			fmt.Errorf("无效的refresh token：%w", nil),
+		))
+		return
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorUnauthorized,
+			http.StatusUnauthorized,
+			gin.H{"error": utils.CodeMessages[utils.ErrorTokenInvalidClaims]},
+			fmt.Errorf("token解析失败：%w", nil),
+		))
+		return
+	}
+
+	userIDFloat, ok := claims["user_id"].(float64)
+	if !ok {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorUnauthorized,
+			http.StatusUnauthorized,
+			gin.H{"error": utils.CodeMessages[utils.ErrorTokenInvalidClaimsUserID]},
+			fmt.Errorf("refresh token缺少user_id：%w", nil),
+		))
+		return
+	}
+	userID := uint(userIDFloat)
+
+	// 生成新的 access token
+	newAccessToken, err := utils.GenerateAccessToken(userID)
+	if err != nil {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorInternal,
+			http.StatusInternalServerError,
+			gin.H{"error": utils.CodeMessages[utils.ErrorTokenGenFailed]},
+			fmt.Errorf("生成新的access token失败：%w", err),
+		))
+		return
+	}
+	utils.Success(c, http.StatusOK, utils.OK, gin.H{"access_token": newAccessToken})
 }

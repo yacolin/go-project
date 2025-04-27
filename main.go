@@ -19,8 +19,9 @@ func main() {
 
 	configs.ConnectMysql()
 
-	r.POST("/login", controllers.Login)
-	r.POST("/register", controllers.Register)
+	r.POST("/api/v1/login", controllers.Login)
+	r.POST("/api/v1/register", controllers.Register)
+	r.POST("/api/v1/refresh", controllers.Refresh)
 
 	v1 := r.Group("/api/v1")
 	v1.Use(middlewares.JWTAuthMiddleware())
