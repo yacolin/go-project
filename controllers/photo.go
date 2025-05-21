@@ -279,3 +279,63 @@ func GetPhotosByAlbumID(c *gin.Context) {
 		Total: count,
 	})
 }
+
+/**
+ * @description: 获取照片的所有评论
+ * @param {*gin.Context} c
+ * @return {*}
+ */
+// @router /photos/:id/comments [get]
+func GetPhotoComments(c *gin.Context) {
+	photoID := c.Param("id")
+
+	// 验证照片是否存在
+	var photo models.Photo
+	if err := configs.DB.First(&photo, photoID).Error; err != nil {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorNotFound,
+			http.StatusNotFound,
+			gin.H{"resource": "photo"},
+			fmt.Errorf("照片不存在：%w", err),
+		))
+		return
+	}
+
+	// 分页参数
+	limit, offset, isAbort := utils.GetPaginationQuery(c)
+	if isAbort {
+		return
+	}
+
+	// 查询评论
+	var (
+		comments []models.Comment
+		count    int64
+	)
+	baseQuery := configs.DB.Model(&models.Comment{}).Where("photo_id = ?", photoID)
+
+	if err := baseQuery.Count(&count).Error; err != nil {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorDatabaseQuery,
+			http.StatusInternalServerError,
+			gin.H{"operation": "query_photo_comments"},
+			fmt.Errorf("查询评论总数失败：%w", err),
+		))
+		return
+	}
+
+	if err := baseQuery.Limit(limit).Offset(offset).Find(&comments).Error; err != nil {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorDatabaseQuery,
+			http.StatusInternalServerError,
+			gin.H{"operation": "query_photo_comments"},
+			fmt.Errorf("查询评论失败：%w", err),
+		))
+		return
+	}
+
+	utils.Success(c, http.StatusOK, utils.OK, utils.ListResponse{
+		List:  comments,
+		Total: count,
+	})
+}
