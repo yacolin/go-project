@@ -1,0 +1,281 @@
+package controllers
+
+import (
+	"fmt"
+	"go-project/configs"
+	"go-project/models"
+	"go-project/utils"
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
+
+/**
+ * @description: 获取所有照片
+ * @param {*gin.Context} c
+ * @return {*}
+ */
+// @router /photos [get]
+func GetAllPhotos(c *gin.Context) {
+	// 1. 参数解析与校验
+	limit, offset, isAbort := utils.GetPaginationQuery(c)
+	if isAbort {
+		return
+	}
+
+	// 2. 数据库操作
+	var (
+		photos []models.Photo
+		count  int64
+	)
+
+	baseQuery := configs.DB.Model(&models.Photo{})
+
+	// 获取数据总数
+	if err := baseQuery.Count(&count).Error; err != nil {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorDatabaseQuery,
+			http.StatusInternalServerError,
+			gin.H{"operation": "query_photos"},
+			fmt.Errorf("查询总计失败：%w", err),
+		))
+		return
+	}
+
+	// 获取分页数据
+	if err := baseQuery.Limit(limit).Offset(offset).Find(&photos).Error; err != nil {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorDatabaseQuery,
+			http.StatusInternalServerError,
+			gin.H{"operation": "query_photos"},
+			fmt.Errorf("查询失败：%w", err),
+		))
+		return
+	}
+
+	// 3. 返回结果
+	utils.Success(c, http.StatusOK, utils.OK, utils.ListResponse{
+		List:  photos,
+		Total: count,
+	})
+}
+
+/**
+ * @description: 创建照片
+ * @param {*gin.Context} c
+ * @return {*}
+ */
+// @router /photos [post]
+func CreatePhoto(c *gin.Context) {
+	// 绑定请求数据
+	var createReq models.PhotoForm
+
+	if err := c.ShouldBindJSON(&createReq); err != nil {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorBadRequest,
+			http.StatusBadRequest,
+			gin.H{"validation": utils.FormatValidationErrors(err)},
+			fmt.Errorf("参数错误：%w", err),
+		))
+		return
+	}
+
+	// 验证专辑是否存在
+	var album models.Album
+	if err := configs.DB.First(&album, createReq.AlbumID).Error; err != nil {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorNotFound,
+			http.StatusNotFound,
+			gin.H{"resource": "album"},
+			fmt.Errorf("专辑不存在：%w", err),
+		))
+		return
+	}
+
+	// 创建新的 Photo 实例
+	newPhoto := models.Photo{
+		Title:       createReq.Title,
+		URL:         createReq.URL,
+		Description: createReq.Description,
+		AlbumID:     createReq.AlbumID,
+	}
+
+	// 写入数据库
+	if err := configs.DB.Create(&newPhoto).Error; err != nil {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorDatabaseCreate,
+			http.StatusInternalServerError,
+			gin.H{"operation": "create_photo"},
+			fmt.Errorf("photo创建失败：%w", err),
+		))
+		return
+	}
+
+	// 返回创建结果
+	utils.Success(
+		c,
+		http.StatusCreated,
+		utils.Created,
+		newPhoto,
+	)
+}
+
+/**
+ * @description: 获取单个照片
+ * @param {*gin.Context} c
+ * @return {*}
+ */
+// @router /photos/:id [get]
+func GetPhotoByID(c *gin.Context) {
+	id := c.Param("id")
+
+	var photo models.Photo
+	if err := configs.DB.First(&photo, id).Error; err != nil {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorNotFound,
+			http.StatusNotFound,
+			gin.H{"resource": "photo"},
+			fmt.Errorf("照片不存在：%w", err),
+		))
+		return
+	}
+
+	utils.Success(c, http.StatusOK, utils.OK, photo)
+}
+
+/**
+ * @description: 更新照片
+ * @param {*gin.Context} c
+ * @return {*}
+ */
+// @router /photos/:id [put]
+func UpdatePhoto(c *gin.Context) {
+	// 1. 获取 ID 参数
+	id := c.Param("id")
+
+	// 2. 绑定请求数据
+	var updateReq models.PhotoForm
+	if err := c.ShouldBindJSON(&updateReq); err != nil {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorBadRequest,
+			http.StatusBadRequest,
+			gin.H{"validation": utils.FormatValidationErrors(err)},
+			fmt.Errorf("参数错误：%w", err),
+		))
+		return
+	}
+
+	// 3. 验证专辑是否存在
+	var album models.Album
+	if err := configs.DB.First(&album, updateReq.AlbumID).Error; err != nil {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorNotFound,
+			http.StatusNotFound,
+			gin.H{"resource": "album"},
+			fmt.Errorf("专辑不存在：%w", err),
+		))
+		return
+	}
+
+	// 4. 更新数据库
+	if err := configs.DB.Model(&models.Photo{}).Where("id = ?", id).Updates(updateReq.ToMap()).Error; err != nil {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorDatabaseUpdate,
+			http.StatusInternalServerError,
+			gin.H{"operation": "update_photo"},
+			fmt.Errorf("photo更新失败：%w", err),
+		))
+		return
+	}
+
+	utils.Success(c, http.StatusOK, utils.OK, gin.H{"message": "Photo updated successfully"})
+}
+
+/**
+ * @description: 删除照片
+ * @param {*gin.Context} c
+ * @return {*}
+ */
+// @router /photos/:id [delete]
+func DeletePhoto(c *gin.Context) {
+	// 1. 获取 ID 参数
+	id := c.Param("id")
+
+	// 2. 删除数据库记录
+	if err := configs.DB.Delete(&models.Photo{}, id).Error; err != nil {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorDatabaseDelete,
+			http.StatusInternalServerError,
+			gin.H{"operation": "delete_photo"},
+			fmt.Errorf("photo删除失败：%w", err),
+		))
+		return
+	}
+
+	utils.Success(c, http.StatusOK, utils.Deleted, gin.H{"message": "Photo deleted successfully"})
+}
+
+/**
+ * @description: 获取专辑下的所有照片
+ * @param {*gin.Context} c
+ * @return {*}
+ */
+// @router /albums/:id/photos [get]
+func GetPhotosByAlbumID(c *gin.Context) {
+	// 1. 获取专辑 ID
+	albumID := c.Param("id")
+
+	// 2. 验证专辑是否存在
+	var album models.Album
+	if err := configs.DB.First(&album, albumID).Error; err != nil {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorNotFound,
+			http.StatusNotFound,
+			gin.H{"resource": "album"},
+			fmt.Errorf("专辑不存在：%w", err),
+		))
+		return
+	}
+
+	// 3. 获取分页参数
+	limit, offset, isAbort := utils.GetPaginationQuery(c)
+	if isAbort {
+		return
+	}
+
+	// 4. 查询照片
+	var (
+		photos []models.Photo
+		count  int64
+	)
+
+	baseQuery := configs.DB.Model(&models.Photo{}).Where("album_id = ?", albumID)
+
+	// 获取数据总数
+	if err := baseQuery.Count(&count).Error; err != nil {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorDatabaseQuery,
+			http.StatusInternalServerError,
+			gin.H{"operation": "query_album_photos"},
+			fmt.Errorf("查询总计失败：%w", err),
+		))
+		return
+	}
+
+	// 获取分页数据
+	if err := baseQuery.Limit(limit).Offset(offset).Find(&photos).Error; err != nil {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorDatabaseQuery,
+			http.StatusInternalServerError,
+			gin.H{"operation": "query_album_photos"},
+			fmt.Errorf("查询失败：%w", err),
+		))
+		return
+	}
+
+	// 5. 返回结果
+	utils.Success(c, http.StatusOK, utils.OK, utils.ListResponse{
+		List:  photos,
+		Total: count,
+	})
+}

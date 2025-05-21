@@ -15,17 +15,34 @@ func main() {
 	gin.SetMode(gin.DebugMode)
 	r := gin.Default()
 	r.StaticFile("/favicon.ico", "./static/favicon.ico")
+	r.Static("/static", "./static")
 	r.Use(middlewares.ErrorHandler(), middlewares.ValidatorMiddleware())
 
 	configs.ConnectMysql()
+
+	// 初始化OSS配置
+	// ossConfig := configs.OSSConfig{
+	// 	Endpoint:        os.Getenv("OSS_ENDPOINT"),
+	// 	AccessKeyID:     os.Getenv("OSS_ACCESS_KEY_ID"),
+	// 	AccessKeySecret: os.Getenv("OSS_ACCESS_KEY_SECRET"),
+	// 	BucketName:      os.Getenv("OSS_BUCKET_NAME"),
+	// }
+
+	// if err := configs.InitOSS(ossConfig); err != nil {
+	// 	log.Fatalf("Failed to initialize OSS: %v", err)
+	// }
 
 	r.POST("/api/v1/login", controllers.Login)
 	r.POST("/api/v1/register", controllers.Register)
 	r.POST("/api/v1/refresh", controllers.Refresh)
 
 	v1 := r.Group("/api/v1")
-	v1.Use(middlewares.JWTAuthMiddleware())
+	// v1.Use(middlewares.JWTAuthMiddleware())
 	{
+		// v1.GET("/files", controllers.GetAllFiles)
+		// v1.POST("/files", controllers.UploadFile)
+		// v1.GET("/files/:id", controllers.GetFileByID)
+		// v1.DELETE("/files/:id", controllers.DeleteFile)
 
 		v1.GET("/teams", controllers.GetAllTeams)
 		v1.GET("/team/:id", controllers.GetTeamByID)
