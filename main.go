@@ -64,6 +64,12 @@ func main() {
 		v1.DELETE("/album/:id", controllers.DeleteAlbum)
 
 		v1.GET("/songs", controllers.GetAllSongs)
+
+		// 评论相关
+		v1.POST("/comments", controllers.CreateComment)
+		v1.PUT("/comments/:id", controllers.UpdateComment)
+		v1.DELETE("/comments/:id", controllers.DeleteComment)
+		v1.GET("/photos/:id/comments", controllers.GetCommentsByPhotoID)
 	}
 
 	r.NoRoute(func(c *gin.Context) {
