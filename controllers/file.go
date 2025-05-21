@@ -4,87 +4,254 @@ import (
 	"fmt"
 	"go-project/configs"
 	"go-project/models"
+	"go-project/utils"
 	"io"
 	"mime/multipart"
 	"net/http"
-	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	MaxFileSize    = 5 << 20 // 5MB
+	UploadBasePath = "./static/uploads/"
+)
+
+/**
+ * @description: 获取所有文件
+ * @param {*gin.Context} c
+ * @return {*}
+ */
+// @router /files [get]
+func GetAllFiles(c *gin.Context) {
+	// 1. 参数解析与校验
+	limit, offset, isAbort := utils.GetPaginationQuery(c)
+	if isAbort {
+		return
+	}
+
+	// 2. 数据库操作
+	var (
+		files []models.File
+		count int64
+	)
+
+	baseQuery := configs.DB.Model(&models.File{})
+
+	// 获取数据总数
+	if err := baseQuery.Count(&count).Error; err != nil {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorDatabaseQuery,
+			http.StatusInternalServerError,
+			gin.H{"operation": "query_files"},
+			fmt.Errorf("查询总计失败：%w", err),
+		))
+		return
+	}
+
+	// 获取分页数据
+	if err := baseQuery.Limit(limit).Offset(offset).Find(&files).Error; err != nil {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorDatabaseQuery,
+			http.StatusInternalServerError,
+			gin.H{"operation": "query_files"},
+			fmt.Errorf("查询失败：%w", err),
+		))
+		return
+	}
+
+	// 3. 返回结果
+	utils.Success(c, http.StatusOK, utils.OK, utils.ListResponse{
+		List:  files,
+		Total: count,
+	})
+}
+
+/**
+ * @description: 上传文件
+ * @param {*gin.Context} c
+ * @return {*}
+ */
+// @router /files [post]
 func UploadFile(c *gin.Context) {
-	// 单文件上传
+	// 1. 获取文件
 	file, err := c.FormFile("file")
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "File upload failed",
-		})
+		c.Error(utils.NewBusinessError(
+			utils.ErrorBadRequest,
+			http.StatusBadRequest,
+			gin.H{"field": "file"},
+			fmt.Errorf("文件上传失败：%w", err),
+		))
 		return
 	}
 
-	// 验证文件类型
+	// 2. 验证文件类型
 	if !isImage(file) {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "Only image files are allowed",
-		})
+		c.Error(utils.NewBusinessError(
+			utils.ErrorBadRequest,
+			http.StatusBadRequest,
+			gin.H{"validation": "file_type"},
+			fmt.Errorf("仅支持图片文件"),
+		))
 		return
 	}
 
-	// 验证文件大小（限制5MB）
-	if file.Size > 5<<20 {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{
-			"error": "File size exceeds 5MB limit",
-		})
+	// 3. 验证文件大小
+	if file.Size > MaxFileSize {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorBadRequest,
+			http.StatusBadRequest,
+			gin.H{"validation": "file_size"},
+			fmt.Errorf("文件大小超过5MB限制"),
+		))
 		return
 	}
 
-	// 生成唯一文件名
+	// 4. 生成唯一文件名
 	newFileName := fmt.Sprintf("%d%s", time.Now().UnixNano(), filepath.Ext(file.Filename))
 
-	// 文件保存路径
-	uploadPath := "./static/uploads/"
-	filePath := filepath.Join(uploadPath, newFileName)
+	// 5. 打开文件
+	src, err := file.Open()
+	if err != nil {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorInternal,
+			http.StatusInternalServerError,
+			gin.H{"operation": "open_file"},
+			fmt.Errorf("打开文件失败：%w", err),
+		))
+		return
+	}
+	defer src.Close()
 
-	// 确保目录存在
-	if err := os.MkdirAll(uploadPath, os.ModePerm); err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to create upload directory",
-		})
+	// 6. 上传到OSS
+	bucket := configs.GetOSSBucket()
+	if bucket == nil {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorInternal,
+			http.StatusInternalServerError,
+			gin.H{"operation": "get_oss_bucket"},
+			fmt.Errorf("获取OSS Bucket失败"),
+		))
 		return
 	}
 
-	// 保存文件
-	if err := c.SaveUploadedFile(file, filePath); err != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to save file",
-		})
+	ossPath := fmt.Sprintf("uploads/%s", newFileName)
+	err = bucket.PutObject(ossPath, src)
+	if err != nil {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorInternal,
+			http.StatusInternalServerError,
+			gin.H{"operation": "upload_to_oss"},
+			fmt.Errorf("上传到OSS失败：%w", err),
+		))
 		return
 	}
 
-	// 保存到数据库
+	// 7. 获取文件的OSS URL
+	ossURL := fmt.Sprintf("https://%s.%s/%s", bucket.BucketName, bucket.Client.Config.Endpoint, ossPath)
+
+	// 8. 保存到数据库
 	fileRecord := models.File{
-		FileName:  newFileName,
-		FilePath:  filePath,
-		MimeType:  file.Header.Get("Content-Type"),
-		Size:      file.Size,
-		CreatedAt: time.Now(),
+		FileName: newFileName,
+		FilePath: ossPath,
+		OssURL:   ossURL,
+		MimeType: file.Header.Get("Content-Type"),
+		Size:     file.Size,
 	}
 
-	if result := configs.DB.Create(&fileRecord); result.Error != nil {
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to save file record",
-		})
+	if err := configs.DB.Create(&fileRecord).Error; err != nil {
+		// 删除已上传的OSS文件
+		bucket.DeleteObject(ossPath)
+		c.Error(utils.NewBusinessError(
+			utils.ErrorDatabaseCreate,
+			http.StatusInternalServerError,
+			gin.H{"operation": "create_file_record"},
+			fmt.Errorf("保存文件记录失败：%w", err),
+		))
 		return
 	}
 
-	// 返回成功响应
-	c.JSON(http.StatusOK, gin.H{
-		"message":  "File uploaded successfully",
-		"file_url": fmt.Sprintf("/static/uploads/%s", newFileName),
-		"file_id":  fileRecord.ID,
+	// 9. 返回成功响应
+	utils.Success(c, http.StatusCreated, utils.Created, gin.H{
+		"id":      fileRecord.ID,
+		"oss_url": ossURL,
 	})
+}
+
+/**
+ * @description: 获取单个文件信息
+ * @param {*gin.Context} c
+ * @return {*}
+ */
+// @router /files/:id [get]
+func GetFileByID(c *gin.Context) {
+	id := c.Param("id")
+
+	var file models.File
+	if err := configs.DB.First(&file, id).Error; err != nil {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorNotFound,
+			http.StatusNotFound,
+			gin.H{"resource": "file"},
+			fmt.Errorf("文件不存在：%w", err),
+		))
+		return
+	}
+
+	utils.Success(c, http.StatusOK, utils.OK, file)
+}
+
+/**
+ * @description: 删除文件
+ * @param {*gin.Context} c
+ * @return {*}
+ */
+// @router /files/:id [delete]
+func DeleteFile(c *gin.Context) {
+	id := c.Param("id")
+
+	// 1. 查找文件记录
+	var file models.File
+	if err := configs.DB.First(&file, id).Error; err != nil {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorNotFound,
+			http.StatusNotFound,
+			gin.H{"resource": "file"},
+			fmt.Errorf("文件不存在：%w", err),
+		))
+		return
+	}
+
+	// 2. 从OSS删除文件
+	bucket := configs.GetOSSBucket()
+	if bucket != nil {
+		err := bucket.DeleteObject(file.FilePath)
+		if err != nil {
+			c.Error(utils.NewBusinessError(
+				utils.ErrorInternal,
+				http.StatusInternalServerError,
+				gin.H{"operation": "delete_oss_file"},
+				fmt.Errorf("从OSS删除文件失败：%w", err),
+			))
+			return
+		}
+	}
+
+	// 3. 删除数据库记录
+	if err := configs.DB.Delete(&file).Error; err != nil {
+		c.Error(utils.NewBusinessError(
+			utils.ErrorDatabaseDelete,
+			http.StatusInternalServerError,
+			gin.H{"operation": "delete_file_record"},
+			fmt.Errorf("删除文件记录失败：%w", err),
+		))
+		return
+	}
+
+	utils.Success(c, http.StatusOK, utils.Deleted, gin.H{"message": "File deleted successfully"})
 }
 
 // 验证是否为图片文件
