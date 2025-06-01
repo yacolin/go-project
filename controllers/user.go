@@ -17,7 +17,7 @@ func Login(c *gin.Context) {
 		c.Error(utils.NewBusinessError(
 			utils.ErrorBadRequest,
 			http.StatusBadRequest,
-			gin.H{"validation": utils.FormatValidationErrors(err)},
+			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig("login"))},
 			fmt.Errorf("参数错误：%w", err),
 		))
 		return
@@ -89,7 +89,7 @@ func Register(c *gin.Context) {
 		c.Error(utils.NewBusinessError(
 			utils.ErrorBadRequest,
 			http.StatusBadRequest,
-			gin.H{"register": utils.FormatValidationErrors(err)},
+			gin.H{"register": utils.FormatValidationErrors(err, utils.GetValidationConfig("register"))},
 			fmt.Errorf("参数错误：%w", err),
 		))
 		return
@@ -145,7 +145,7 @@ func Refresh(c *gin.Context) {
 		c.Error(utils.NewBusinessError(
 			utils.ErrorBadRequest,
 			http.StatusBadRequest,
-			gin.H{"refresh": utils.FormatValidationErrors(err)},
+			gin.H{"refresh": utils.FormatValidationErrors(err, utils.GetValidationConfig("refresh"))},
 			fmt.Errorf("参数错误：%w", err),
 		))
 	}

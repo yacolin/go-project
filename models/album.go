@@ -17,10 +17,6 @@ type AlbumForm struct {
 	Liked       int64  `json:"liked" binding:"gte=0"`
 }
 
-type UserForm struct {
-	Phone string `json:"phone" binding:"required,regexp=^182-[0-9]{4}-[0-9]{4}$"`
-}
-
 func (r *AlbumForm) ToMap() map[string]interface{} {
 	return map[string]interface{}{
 		"name":        r.Name,

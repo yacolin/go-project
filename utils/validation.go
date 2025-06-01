@@ -7,41 +7,79 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-func FormatValidationErrors(err error) map[string]string {
+// ValidationConfig 用于配置验证错误信息
+type ValidationConfig struct {
+	FieldMap map[string]string // 字段映射，key为字段名，value为显示名
+}
+
+// NewValidationConfig 创建一个新的验证配置
+func NewValidationConfig() *ValidationConfig {
+	return &ValidationConfig{
+		FieldMap: make(map[string]string),
+	}
+}
+
+// SetFieldMap 设置字段映射
+func (c *ValidationConfig) SetFieldMap(fieldMap map[string]string) *ValidationConfig {
+	c.FieldMap = fieldMap
+	return c
+}
+
+// FormatValidationErrors 格式化验证错误信息
+// 如果config为nil，将使用原始字段名
+func FormatValidationErrors(err error, config *ValidationConfig) map[string]string {
 	errors := make(map[string]string)
 
 	if validationErrs, ok := err.(validator.ValidationErrors); ok {
 		for _, fe := range validationErrs {
 			field := strings.ToLower(fe.Field())
+
+			// 获取字段显示名
+			var fieldName string
+			if config != nil {
+				fieldName = config.FieldMap[fe.Field()]
+			}
+			if fieldName == "" {
+				fieldName = field
+			}
+
 			switch fe.Tag() {
 			case "required":
-				errors[field] = "该字段为必填字段"
+				errors[field] = fmt.Sprintf("%s为必填字段", fieldName)
 			case "min":
-				errors[field] = fmt.Sprintf("最小长度/值为 %s", fe.Param())
+				if fe.Type().Kind().String() == "string" {
+					errors[field] = fmt.Sprintf("%s的长度不能少于%s个字符", fieldName, fe.Param())
+				} else {
+					errors[field] = fmt.Sprintf("%s不能小于%s", fieldName, fe.Param())
+				}
 			case "max":
-				errors[field] = fmt.Sprintf("最大长度/值为 %s", fe.Param())
+				if fe.Type().Kind().String() == "string" {
+					errors[field] = fmt.Sprintf("%s的长度不能超过%s个字符", fieldName, fe.Param())
+				} else {
+					errors[field] = fmt.Sprintf("%s不能大于%s", fieldName, fe.Param())
+				}
 			case "gte":
-				errors[field] = fmt.Sprintf("值必须大于或等于 %s", fe.Param())
+				errors[field] = fmt.Sprintf("%s必须大于或等于%s", fieldName, fe.Param())
 			case "lte":
-				errors[field] = fmt.Sprintf("值必须小于或等于 %s", fe.Param())
+				errors[field] = fmt.Sprintf("%s必须小于或等于%s", fieldName, fe.Param())
 			case "email":
-				errors[field] = "必须是有效的电子邮件地址"
+				errors[field] = fmt.Sprintf("%s必须是有效的电子邮件地址", fieldName)
 			case "url":
-				errors[field] = "必须是有效的 URL"
+				errors[field] = fmt.Sprintf("%s必须是有效的URL", fieldName)
 			case "len":
-				errors[field] = fmt.Sprintf("长度必须为 %s", fe.Param())
+				errors[field] = fmt.Sprintf("%s的长度必须为%s", fieldName, fe.Param())
 			case "numeric":
-				errors[field] = "必须是数字"
+				errors[field] = fmt.Sprintf("%s必须是数字", fieldName)
 			case "alpha":
-				errors[field] = "只能包含字母"
+				errors[field] = fmt.Sprintf("%s只能包含字母", fieldName)
 			case "alphanum":
-				errors[field] = "只能包含字母和数字"
+				errors[field] = fmt.Sprintf("%s只能包含字母和数字", fieldName)
 			case "uuid":
-				errors[field] = "必须是有效的 UUID"
+				errors[field] = fmt.Sprintf("%s必须是有效的UUID", fieldName)
 			case "regexp":
-				errors[field] = "格式不符合要求" // 自定义正则表达式的错误信息
+				errors[field] = fmt.Sprintf("%s格式不符合要求", fieldName)
 			default:
-				errors[field] = fmt.Sprintf("格式无效（%s）", fe.Tag())
+				errors[field] = fmt.Sprintf("%s的格式无效（%s）", fieldName, fe.Tag())
 			}
 		}
 	}

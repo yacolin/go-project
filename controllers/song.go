@@ -74,7 +74,7 @@ func CreateSong(c *gin.Context) {
 		c.Error(utils.NewBusinessError(
 			utils.ErrorBadRequest,
 			http.StatusBadRequest,
-			gin.H{"validation": utils.FormatValidationErrors(err)},
+			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig("song"))},
 			fmt.Errorf("参数错误：%w", err),
 		))
 		return
@@ -159,7 +159,7 @@ func UpdateSong(c *gin.Context) {
 		c.Error(utils.NewBusinessError(
 			utils.ErrorBadRequest,
 			http.StatusBadRequest,
-			gin.H{"validation": utils.FormatValidationErrors(err)},
+			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig("song"))},
 			fmt.Errorf("参数错误：%w", err),
 		))
 		return

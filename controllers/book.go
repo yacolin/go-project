@@ -96,7 +96,7 @@ func CreateBook(c *gin.Context) {
 		c.Error(utils.NewBusinessError(
 			utils.ErrorBadRequest,
 			http.StatusBadRequest,
-			gin.H{"validation": utils.FormatValidationErrors(err)},
+			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig("book"))},
 			fmt.Errorf("参数错误：%w", err),
 		))
 		return
@@ -192,7 +192,7 @@ func UpdateBook(c *gin.Context) {
 		c.Error(utils.NewBusinessError(
 			utils.ErrorBadRequest,
 			http.StatusBadRequest,
-			gin.H{"validation": utils.FormatValidationErrors(err)},
+			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig("book"))},
 			fmt.Errorf("参数错误：%w", err),
 		))
 		return
