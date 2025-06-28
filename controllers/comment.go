@@ -10,7 +10,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// @router /comments [post]
+// @Summary 创建评论
+// @Description 创建一条新的评论
+// @Tags comments
+// @Accept json
+// @Produce json
+// @Param comment body models.CommentForm true "评论信息"
+// @Success 201 {object} models.Comment
+// @Failure 400 {object} utils.BusinessError
+// @Failure 404 {object} utils.BusinessError
+// @Failure 500 {object} utils.BusinessError
+// @Router /comments [post]
 func CreateComment(c *gin.Context) {
 	var createReq models.CommentForm
 	if err := c.ShouldBindJSON(&createReq); err != nil {
@@ -52,7 +62,17 @@ func CreateComment(c *gin.Context) {
 	utils.Success(c, http.StatusCreated, utils.Created, newComment)
 }
 
-// @router /comments/:id [put]
+// @Summary 更新评论
+// @Description 根据ID更新评论内容
+// @Tags comments
+// @Accept json
+// @Produce json
+// @Param id path int true "评论ID"
+// @Param comment body models.CommentForm true "评论信息"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} utils.BusinessError
+// @Failure 500 {object} utils.BusinessError
+// @Router /comments/{id} [put]
 func UpdateComment(c *gin.Context) {
 	id := c.Param("id")
 	var updateReq models.CommentForm
@@ -77,7 +97,14 @@ func UpdateComment(c *gin.Context) {
 	utils.Success(c, http.StatusOK, utils.OK, gin.H{"message": "Comment updated successfully"})
 }
 
-// @router /comments/:id [delete]
+// @Summary 删除评论
+// @Description 根据ID删除评论
+// @Tags comments
+// @Produce json
+// @Param id path int true "评论ID"
+// @Success 200 {object} map[string]string
+// @Failure 500 {object} utils.BusinessError
+// @Router /comments/{id} [delete]
 func DeleteComment(c *gin.Context) {
 	id := c.Param("id")
 	if err := configs.DB.Delete(&models.Comment{}, id).Error; err != nil {
@@ -92,7 +119,14 @@ func DeleteComment(c *gin.Context) {
 	utils.Success(c, http.StatusOK, utils.Deleted, gin.H{"message": "Comment deleted successfully"})
 }
 
-// @router /photos/:id/comments [get]
+// @Summary 获取照片的所有评论
+// @Description 根据照片ID获取所有评论
+// @Tags comments
+// @Produce json
+// @Param id path int true "照片ID"
+// @Success 200 {array} models.Comment
+// @Failure 500 {object} utils.BusinessError
+// @Router /photos/{id}/comments [get]
 func GetCommentsByPhotoID(c *gin.Context) {
 	photoID := c.Param("id")
 	var comments []models.Comment

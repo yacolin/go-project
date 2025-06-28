@@ -11,12 +11,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-/**
- * @description: 获取所有专辑信息
- * @param {*gin.Context} c
- * @return {*}
- */
-// @router /books [get]
+// @Summary 获取所有图书信息
+// @Description 获取所有图书信息，支持分页
+// @Tags books
+// @Produce json
+// @Param limit query int false "每页数量"
+// @Param offset query int false "偏移量"
+// @Success 200 {object} utils.ApiRes
+// @Failure 500 {object} utils.ApiRes
+// @Router /books [get]
 func GetAllBooks(c *gin.Context) {
 	// 1. 参数解析与校验
 	limit, offset, isAbort := utils.GetPaginationQuery(c)
@@ -59,12 +62,14 @@ func GetAllBooks(c *gin.Context) {
 	})
 }
 
-/**
- * @description: 获取单个专辑信息
- * @param {*gin.Context} c
- * @return {*}
- */
-// @router /book/:id [get]
+// @Summary 获取单个图书信息
+// @Description 根据ID获取图书详情
+// @Tags books
+// @Produce json
+// @Param id path int true "图书ID"
+// @Success 200 {object} models.Book
+// @Failure 404 {object} utils.BusinessError
+// @Router /book/{id} [get]
 func GetBookByID(c *gin.Context) {
 	id := c.Param("id")
 
@@ -83,12 +88,16 @@ func GetBookByID(c *gin.Context) {
 	utils.Success(c, http.StatusOK, utils.OK, book)
 }
 
-/**
- * @description: 创建专辑信息
- * @param {*gin.Context} c
- * @return {*}
- */
-// @router /books [post]
+// @Summary 创建图书信息
+// @Description 创建一本新图书
+// @Tags books
+// @Accept json
+// @Produce json
+// @Param book body models.BookForm true "图书信息"
+// @Success 201 {object} models.Book
+// @Failure 400 {object} utils.BusinessError
+// @Failure 500 {object} utils.BusinessError
+// @Router /books [post]
 func CreateBook(c *gin.Context) {
 	// 绑定请求数据
 	var createReq models.BookForm
@@ -131,12 +140,15 @@ func CreateBook(c *gin.Context) {
 	)
 }
 
-/**
- * @description: 删除专辑信息
- * @param {*gin.Context} c
- * @return {*}
- */
-// @router /book/:id [delete]
+// @Summary 删除图书信息
+// @Description 根据ID删除图书
+// @Tags books
+// @Produce json
+// @Param id path int true "图书ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 404 {object} utils.BusinessError
+// @Failure 500 {object} utils.BusinessError
+// @Router /book/{id} [delete]
 func DeleteBook(c *gin.Context) {
 	id := c.Param("id")
 
@@ -165,12 +177,18 @@ func DeleteBook(c *gin.Context) {
 	utils.Success(c, http.StatusOK, utils.Deleted, gin.H{"id": id})
 }
 
-/**
- * @description: 更新专辑信息
- * @param {*gin.Context} c
- * @return {*}
- */
-// @router /book/:id [put]
+// @Summary 更新图书信息
+// @Description 根据ID更新图书信息
+// @Tags books
+// @Accept json
+// @Produce json
+// @Param id path int true "图书ID"
+// @Param book body models.BookForm true "图书信息"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} utils.BusinessError
+// @Failure 404 {object} utils.BusinessError
+// @Failure 500 {object} utils.BusinessError
+// @Router /book/{id} [put]
 func UpdateBook(c *gin.Context) {
 	id := c.Param("id")
 
@@ -218,7 +236,17 @@ func UpdateBook(c *gin.Context) {
 	)
 }
 
-// @router /books/search [get]
+// @Summary 搜索图书
+// @Description 根据作者、标题或ISBN模糊搜索图书
+// @Tags books
+// @Produce json
+// @Param author query string false "作者"
+// @Param title query string false "标题"
+// @Param isbn query string false "ISBN"
+// @Success 200 {array} models.Book
+// @Failure 400 {object} utils.BusinessError
+// @Failure 500 {object} utils.BusinessError
+// @Router /books/search [get]
 func SearchBooks(c *gin.Context) {
 	// 1. 获取查询参数
 	author := strings.TrimSpace(c.Query("author"))

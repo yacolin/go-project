@@ -11,6 +11,17 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+// @Summary 用户登录
+// @Description 用户登录，获取access_token和refresh_token
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param login body models.LoginInput true "登录信息"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} utils.BusinessError
+// @Failure 404 {object} utils.BusinessError
+// @Failure 500 {object} utils.BusinessError
+// @Router /login [post]
 func Login(c *gin.Context) {
 	var input models.LoginInput
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -83,6 +94,16 @@ func Login(c *gin.Context) {
 	utils.Success(c, http.StatusOK, utils.OK, gin.H{"access_token": accessToken, "refresh_token": refreshToken})
 }
 
+// @Summary 用户注册
+// @Description 用户注册
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param register body models.LoginInput true "注册信息"
+// @Success 200 {object} nil
+// @Failure 400 {object} utils.BusinessError
+// @Failure 500 {object} utils.BusinessError
+// @Router /register [post]
 func Register(c *gin.Context) {
 	var input models.LoginInput
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -138,6 +159,17 @@ func Register(c *gin.Context) {
 	utils.Success(c, http.StatusOK, utils.OK, nil)
 }
 
+// @Summary 刷新Token
+// @Description 使用refresh_token刷新access_token
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param refresh body models.RefreshInput true "刷新信息"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} utils.BusinessError
+// @Failure 401 {object} utils.BusinessError
+// @Failure 500 {object} utils.BusinessError
+// @Router /refresh [post]
 func Refresh(c *gin.Context) {
 	var input models.RefreshInput
 

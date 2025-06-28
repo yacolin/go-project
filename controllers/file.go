@@ -19,12 +19,15 @@ const (
 	UploadBasePath = "./static/uploads/"
 )
 
-/**
- * @description: 获取所有文件
- * @param {*gin.Context} c
- * @return {*}
- */
-// @router /files [get]
+// @Summary 获取所有文件
+// @Description 获取所有文件，支持分页
+// @Tags files
+// @Produce json
+// @Param limit query int false "每页数量"
+// @Param offset query int false "偏移量"
+// @Success 200 {object} utils.ListResponse
+// @Failure 500 {object} utils.BusinessError
+// @Router /files [get]
 func GetAllFiles(c *gin.Context) {
 	// 1. 参数解析与校验
 	limit, offset, isAbort := utils.GetPaginationQuery(c)
@@ -69,12 +72,16 @@ func GetAllFiles(c *gin.Context) {
 	})
 }
 
-/**
- * @description: 上传文件
- * @param {*gin.Context} c
- * @return {*}
- */
-// @router /files [post]
+// @Summary 上传文件
+// @Description 上传图片文件到OSS
+// @Tags files
+// @Accept multipart/form-data
+// @Produce json
+// @Param file formData file true "文件"
+// @Success 201 {object} map[string]interface{}
+// @Failure 400 {object} utils.BusinessError
+// @Failure 500 {object} utils.BusinessError
+// @Router /files [post]
 func UploadFile(c *gin.Context) {
 	// 1. 获取文件
 	file, err := c.FormFile("file")
@@ -181,12 +188,14 @@ func UploadFile(c *gin.Context) {
 	})
 }
 
-/**
- * @description: 获取单个文件信息
- * @param {*gin.Context} c
- * @return {*}
- */
-// @router /files/:id [get]
+// @Summary 获取单个文件信息
+// @Description 根据ID获取文件详情
+// @Tags files
+// @Produce json
+// @Param id path int true "文件ID"
+// @Success 200 {object} models.File
+// @Failure 404 {object} utils.BusinessError
+// @Router /files/{id} [get]
 func GetFileByID(c *gin.Context) {
 	id := c.Param("id")
 
@@ -204,12 +213,15 @@ func GetFileByID(c *gin.Context) {
 	utils.Success(c, http.StatusOK, utils.OK, file)
 }
 
-/**
- * @description: 删除文件
- * @param {*gin.Context} c
- * @return {*}
- */
-// @router /files/:id [delete]
+// @Summary 删除文件
+// @Description 根据ID删除文件
+// @Tags files
+// @Produce json
+// @Param id path int true "文件ID"
+// @Success 200 {object} map[string]string
+// @Failure 404 {object} utils.BusinessError
+// @Failure 500 {object} utils.BusinessError
+// @Router /files/{id} [delete]
 func DeleteFile(c *gin.Context) {
 	id := c.Param("id")
 

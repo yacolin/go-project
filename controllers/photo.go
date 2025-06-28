@@ -10,12 +10,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-/**
- * @description: 获取所有照片
- * @param {*gin.Context} c
- * @return {*}
- */
-// @router /photos [get]
+// @Summary 获取所有照片
+// @Description 获取所有照片，支持分页
+// @Tags photos
+// @Produce json
+// @Param limit query int false "每页数量"
+// @Param offset query int false "偏移量"
+// @Success 200 {object} utils.ApiRes
+// @Failure 500 {object} utils.ApiRes
+// @Router /photos [get]
 func GetAllPhotos(c *gin.Context) {
 	// 1. 参数解析与校验
 	limit, offset, isAbort := utils.GetPaginationQuery(c)
@@ -60,12 +63,17 @@ func GetAllPhotos(c *gin.Context) {
 	})
 }
 
-/**
- * @description: 创建照片
- * @param {*gin.Context} c
- * @return {*}
- */
-// @router /photos [post]
+// @Summary 创建照片
+// @Description 创建一条新的照片记录
+// @Tags photos
+// @Accept json
+// @Produce json
+// @Param photo body models.PhotoForm true "照片信息"
+// @Success 201 {object} models.Photo
+// @Failure 400 {object} utils.BusinessError
+// @Failure 404 {object} utils.BusinessError
+// @Failure 500 {object} utils.BusinessError
+// @Router /photos [post]
 func CreatePhoto(c *gin.Context) {
 	// 绑定请求数据
 	var createReq models.PhotoForm
@@ -120,12 +128,14 @@ func CreatePhoto(c *gin.Context) {
 	)
 }
 
-/**
- * @description: 获取单个照片
- * @param {*gin.Context} c
- * @return {*}
- */
-// @router /photos/:id [get]
+// @Summary 获取单个照片
+// @Description 根据ID获取照片详情
+// @Tags photos
+// @Produce json
+// @Param id path int true "照片ID"
+// @Success 200 {object} models.Photo
+// @Failure 404 {object} utils.BusinessError
+// @Router /photos/{id} [get]
 func GetPhotoByID(c *gin.Context) {
 	id := c.Param("id")
 
@@ -143,12 +153,18 @@ func GetPhotoByID(c *gin.Context) {
 	utils.Success(c, http.StatusOK, utils.OK, photo)
 }
 
-/**
- * @description: 更新照片
- * @param {*gin.Context} c
- * @return {*}
- */
-// @router /photos/:id [put]
+// @Summary 更新照片
+// @Description 根据ID更新照片信息
+// @Tags photos
+// @Accept json
+// @Produce json
+// @Param id path int true "照片ID"
+// @Param photo body models.PhotoForm true "照片信息"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} utils.BusinessError
+// @Failure 404 {object} utils.BusinessError
+// @Failure 500 {object} utils.BusinessError
+// @Router /photos/{id} [put]
 func UpdatePhoto(c *gin.Context) {
 	// 1. 获取 ID 参数
 	id := c.Param("id")
@@ -191,12 +207,14 @@ func UpdatePhoto(c *gin.Context) {
 	utils.Success(c, http.StatusOK, utils.OK, gin.H{"message": "Photo updated successfully"})
 }
 
-/**
- * @description: 删除照片
- * @param {*gin.Context} c
- * @return {*}
- */
-// @router /photos/:id [delete]
+// @Summary 删除照片
+// @Description 根据ID删除照片
+// @Tags photos
+// @Produce json
+// @Param id path int true "照片ID"
+// @Success 200 {object} map[string]string
+// @Failure 500 {object} utils.BusinessError
+// @Router /photos/{id} [delete]
 func DeletePhoto(c *gin.Context) {
 	// 1. 获取 ID 参数
 	id := c.Param("id")
@@ -215,12 +233,17 @@ func DeletePhoto(c *gin.Context) {
 	utils.Success(c, http.StatusOK, utils.Deleted, gin.H{"message": "Photo deleted successfully"})
 }
 
-/**
- * @description: 获取专辑下的所有照片
- * @param {*gin.Context} c
- * @return {*}
- */
-// @router /albums/:id/photos [get]
+// @Summary 获取专辑下的所有照片
+// @Description 根据专辑ID获取该专辑下的所有照片，支持分页
+// @Tags photos
+// @Produce json
+// @Param id path int true "专辑ID"
+// @Param limit query int false "每页数量"
+// @Param offset query int false "偏移量"
+// @Success 200 {object} utils.ListResponse
+// @Failure 404 {object} utils.BusinessError
+// @Failure 500 {object} utils.BusinessError
+// @Router /albums/{id}/photos [get]
 func GetPhotosByAlbumID(c *gin.Context) {
 	// 1. 获取专辑 ID
 	albumID := c.Param("id")
@@ -280,12 +303,17 @@ func GetPhotosByAlbumID(c *gin.Context) {
 	})
 }
 
-/**
- * @description: 获取照片的所有评论
- * @param {*gin.Context} c
- * @return {*}
- */
-// @router /photos/:id/comments [get]
+// @Summary 获取照片的所有评论
+// @Description 根据照片ID获取所有评论，支持分页
+// @Tags comments
+// @Produce json
+// @Param id path int true "照片ID"
+// @Param limit query int false "每页数量"
+// @Param offset query int false "偏移量"
+// @Success 200 {object} utils.ListResponse
+// @Failure 404 {object} utils.BusinessError
+// @Failure 500 {object} utils.BusinessError
+// @Router /photos/{id}/comments [get]
 func GetPhotoComments(c *gin.Context) {
 	photoID := c.Param("id")
 

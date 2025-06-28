@@ -1,3 +1,9 @@
+// @title go-learn API
+// @version 1.0
+// @description This is a sample go-learn server.
+// @license.name Apache 2.0
+// @license.url http://www.apache.org/licenses/LICENSE-2.0.html
+// @BasePath /api/v1
 package main
 
 import (
@@ -15,6 +21,7 @@ func main() {
 	gin.SetMode(gin.DebugMode)
 	r := gin.Default()
 	r.StaticFile("/favicon.ico", "./static/favicon.ico")
+	r.StaticFile("/swagger-json", "./docs/swagger.json")
 	r.Static("/static", "./static")
 	r.Use(middlewares.ErrorHandler(), middlewares.ValidatorMiddleware())
 

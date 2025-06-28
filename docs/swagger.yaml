@@ -1,0 +1,1408 @@
+basePath: /api/v1
+definitions:
+  models.Album:
+    properties:
+      author:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      liked:
+        type: integer
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.AlbumForm:
+    properties:
+      author:
+        maxLength: 100
+        minLength: 2
+        type: string
+      description:
+        maxLength: 500
+        type: string
+      liked:
+        minimum: 0
+        type: integer
+      name:
+        maxLength: 100
+        minLength: 2
+        type: string
+    required:
+    - author
+    - name
+    type: object
+  models.Book:
+    properties:
+      author:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      isbn:
+        type: string
+      publish_date:
+        type: string
+      publisher:
+        type: string
+      stock:
+        type: integer
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  models.BookForm:
+    properties:
+      author:
+        maxLength: 50
+        minLength: 2
+        type: string
+      isbn:
+        maxLength: 15
+        minLength: 5
+        type: string
+      publish_date:
+        type: string
+      publisher:
+        type: string
+      stock:
+        type: integer
+      title:
+        maxLength: 50
+        minLength: 2
+        type: string
+    required:
+    - author
+    - isbn
+    - title
+    type: object
+  models.Comment:
+    properties:
+      author:
+        type: string
+      content:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: integer
+      photo_id:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  models.CommentForm:
+    properties:
+      author:
+        maxLength: 100
+        minLength: 1
+        type: string
+      content:
+        maxLength: 500
+        minLength: 1
+        type: string
+      photo_id:
+        type: integer
+    required:
+    - author
+    - content
+    - photo_id
+    type: object
+  models.File:
+    properties:
+      created_at:
+        type: string
+      file_name:
+        type: string
+      file_path:
+        type: string
+      id:
+        type: integer
+      mime_type:
+        type: string
+      oss_url:
+        description: OSS访问URL
+        type: string
+      size:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  models.LoginInput:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  models.Photo:
+    properties:
+      album_id:
+        type: integer
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      title:
+        type: string
+      updated_at:
+        type: string
+      url:
+        type: string
+    type: object
+  models.PhotoForm:
+    properties:
+      album_id:
+        type: integer
+      description:
+        maxLength: 500
+        type: string
+      title:
+        maxLength: 100
+        minLength: 2
+        type: string
+      url:
+        type: string
+    required:
+    - album_id
+    - title
+    - url
+    type: object
+  models.RefreshInput:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  models.Song:
+    properties:
+      album_id:
+        description: 加索引，提高查询速度
+        type: integer
+      created_at:
+        type: string
+      duration:
+        description: 单位：秒
+        type: integer
+      id:
+        type: integer
+      title:
+        type: string
+      track_number:
+        description: 专辑内排序
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  models.SongForm:
+    properties:
+      album_id:
+        type: integer
+      duration:
+        description: 单位：秒
+        minimum: 0
+        type: integer
+      title:
+        maxLength: 100
+        minLength: 1
+        type: string
+      track_number:
+        description: 专辑内排序
+        minimum: 1
+        type: integer
+    required:
+    - album_id
+    - duration
+    - title
+    - track_number
+    type: object
+  models.Team:
+    properties:
+      champions:
+        type: integer
+      city:
+        type: string
+      created_at:
+        type: string
+      divide:
+        type: string
+      id:
+        type: integer
+      logo:
+        type: string
+      name:
+        type: string
+      part:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  utils.ApiRes:
+    properties:
+      code:
+        type: integer
+      data: {}
+      errors: {}
+      message:
+        type: string
+      timestamp:
+        type: string
+    type: object
+  utils.BusinessError:
+    properties:
+      bizCode:
+        type: integer
+      details: {}
+      err: {}
+      httpCode:
+        type: integer
+    type: object
+  utils.ListResponse:
+    properties:
+      list: {}
+      total:
+        type: integer
+    type: object
+info:
+  contact: {}
+  description: This is a sample go-learn server.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: go-learn API
+  version: "1.0"
+paths:
+  /albums:
+    get:
+      description: 获取所有专辑信息，支持分页
+      parameters:
+      - description: 每页数量
+        in: query
+        name: limit
+        type: integer
+      - description: 偏移量
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.ApiRes'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ApiRes'
+      summary: 获取所有专辑信息
+      tags:
+      - albums
+    post:
+      consumes:
+      - application/json
+      description: 创建一个新的专辑
+      parameters:
+      - description: 专辑信息
+        in: body
+        name: album
+        required: true
+        schema:
+          $ref: '#/definitions/models.AlbumForm'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Album'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 创建专辑信息
+      tags:
+      - albums
+  /albums/{id}:
+    delete:
+      description: 根据ID删除专辑
+      parameters:
+      - description: 专辑ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 删除专辑信息
+      tags:
+      - albums
+    get:
+      description: 根据ID获取专辑详情
+      parameters:
+      - description: 专辑ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Album'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 获取单个专辑信息
+      tags:
+      - albums
+    put:
+      consumes:
+      - application/json
+      description: 根据ID更新专辑信息
+      parameters:
+      - description: 专辑ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 专辑信息
+        in: body
+        name: album
+        required: true
+        schema:
+          $ref: '#/definitions/models.AlbumForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 更新专辑信息
+      tags:
+      - albums
+  /albums/{id}/photos:
+    get:
+      description: 根据专辑ID获取该专辑下的所有照片，支持分页
+      parameters:
+      - description: 专辑ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 每页数量
+        in: query
+        name: limit
+        type: integer
+      - description: 偏移量
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.ListResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 获取专辑下的所有照片
+      tags:
+      - photos
+  /albums/{id}/songs:
+    get:
+      description: 根据专辑ID获取该专辑下的所有歌曲，支持分页
+      parameters:
+      - description: 专辑ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 每页数量
+        in: query
+        name: limit
+        type: integer
+      - description: 偏移量
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.ListResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 获取专辑下的所有歌曲
+      tags:
+      - songs
+  /albums/search:
+    get:
+      description: 根据作者名称模糊搜索专辑
+      parameters:
+      - description: 作者名称
+        in: query
+        name: author
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Album'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 搜索专辑信息
+      tags:
+      - albums
+  /book/{id}:
+    delete:
+      description: 根据ID删除图书
+      parameters:
+      - description: 图书ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 删除图书信息
+      tags:
+      - books
+    get:
+      description: 根据ID获取图书详情
+      parameters:
+      - description: 图书ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Book'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 获取单个图书信息
+      tags:
+      - books
+    put:
+      consumes:
+      - application/json
+      description: 根据ID更新图书信息
+      parameters:
+      - description: 图书ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 图书信息
+        in: body
+        name: book
+        required: true
+        schema:
+          $ref: '#/definitions/models.BookForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 更新图书信息
+      tags:
+      - books
+  /books:
+    get:
+      description: 获取所有图书信息，支持分页
+      parameters:
+      - description: 每页数量
+        in: query
+        name: limit
+        type: integer
+      - description: 偏移量
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.ApiRes'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ApiRes'
+      summary: 获取所有图书信息
+      tags:
+      - books
+    post:
+      consumes:
+      - application/json
+      description: 创建一本新图书
+      parameters:
+      - description: 图书信息
+        in: body
+        name: book
+        required: true
+        schema:
+          $ref: '#/definitions/models.BookForm'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Book'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 创建图书信息
+      tags:
+      - books
+  /books/search:
+    get:
+      description: 根据作者、标题或ISBN模糊搜索图书
+      parameters:
+      - description: 作者
+        in: query
+        name: author
+        type: string
+      - description: 标题
+        in: query
+        name: title
+        type: string
+      - description: ISBN
+        in: query
+        name: isbn
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Book'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 搜索图书
+      tags:
+      - books
+  /comments:
+    post:
+      consumes:
+      - application/json
+      description: 创建一条新的评论
+      parameters:
+      - description: 评论信息
+        in: body
+        name: comment
+        required: true
+        schema:
+          $ref: '#/definitions/models.CommentForm'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Comment'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 创建评论
+      tags:
+      - comments
+  /comments/{id}:
+    delete:
+      description: 根据ID删除评论
+      parameters:
+      - description: 评论ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 删除评论
+      tags:
+      - comments
+    put:
+      consumes:
+      - application/json
+      description: 根据ID更新评论内容
+      parameters:
+      - description: 评论ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 评论信息
+        in: body
+        name: comment
+        required: true
+        schema:
+          $ref: '#/definitions/models.CommentForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 更新评论
+      tags:
+      - comments
+  /files:
+    get:
+      description: 获取所有文件，支持分页
+      parameters:
+      - description: 每页数量
+        in: query
+        name: limit
+        type: integer
+      - description: 偏移量
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.ListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 获取所有文件
+      tags:
+      - files
+    post:
+      consumes:
+      - multipart/form-data
+      description: 上传图片文件到OSS
+      parameters:
+      - description: 文件
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 上传文件
+      tags:
+      - files
+  /files/{id}:
+    delete:
+      description: 根据ID删除文件
+      parameters:
+      - description: 文件ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 删除文件
+      tags:
+      - files
+    get:
+      description: 根据ID获取文件详情
+      parameters:
+      - description: 文件ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.File'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 获取单个文件信息
+      tags:
+      - files
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: 用户登录，获取access_token和refresh_token
+      parameters:
+      - description: 登录信息
+        in: body
+        name: login
+        required: true
+        schema:
+          $ref: '#/definitions/models.LoginInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 用户登录
+      tags:
+      - users
+  /pets:
+    get:
+      description: 获取所有宠物，支持分页
+      parameters:
+      - description: 每页数量
+        in: query
+        name: limit
+        type: integer
+      - description: 偏移量
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.ApiRes'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ApiRes'
+      summary: 获取所有宠物
+      tags:
+      - pets
+  /photos:
+    get:
+      description: 获取所有照片，支持分页
+      parameters:
+      - description: 每页数量
+        in: query
+        name: limit
+        type: integer
+      - description: 偏移量
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.ApiRes'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ApiRes'
+      summary: 获取所有照片
+      tags:
+      - photos
+    post:
+      consumes:
+      - application/json
+      description: 创建一条新的照片记录
+      parameters:
+      - description: 照片信息
+        in: body
+        name: photo
+        required: true
+        schema:
+          $ref: '#/definitions/models.PhotoForm'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Photo'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 创建照片
+      tags:
+      - photos
+  /photos/{id}:
+    delete:
+      description: 根据ID删除照片
+      parameters:
+      - description: 照片ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 删除照片
+      tags:
+      - photos
+    get:
+      description: 根据ID获取照片详情
+      parameters:
+      - description: 照片ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Photo'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 获取单个照片
+      tags:
+      - photos
+    put:
+      consumes:
+      - application/json
+      description: 根据ID更新照片信息
+      parameters:
+      - description: 照片ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 照片信息
+        in: body
+        name: photo
+        required: true
+        schema:
+          $ref: '#/definitions/models.PhotoForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 更新照片
+      tags:
+      - photos
+  /photos/{id}/comments:
+    get:
+      description: 根据照片ID获取所有评论，支持分页
+      parameters:
+      - description: 照片ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 每页数量
+        in: query
+        name: limit
+        type: integer
+      - description: 偏移量
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.ListResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 获取照片的所有评论
+      tags:
+      - comments
+  /refresh:
+    post:
+      consumes:
+      - application/json
+      description: 使用refresh_token刷新access_token
+      parameters:
+      - description: 刷新信息
+        in: body
+        name: refresh
+        required: true
+        schema:
+          $ref: '#/definitions/models.RefreshInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 刷新Token
+      tags:
+      - users
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: 用户注册
+      parameters:
+      - description: 注册信息
+        in: body
+        name: register
+        required: true
+        schema:
+          $ref: '#/definitions/models.LoginInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 用户注册
+      tags:
+      - users
+  /songs:
+    get:
+      description: 获取所有歌曲，支持分页
+      parameters:
+      - description: 每页数量
+        in: query
+        name: limit
+        type: integer
+      - description: 偏移量
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.ListResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 获取所有歌曲
+      tags:
+      - songs
+    post:
+      consumes:
+      - application/json
+      description: 创建一首新歌
+      parameters:
+      - description: 歌曲信息
+        in: body
+        name: song
+        required: true
+        schema:
+          $ref: '#/definitions/models.SongForm'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Song'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 创建歌曲
+      tags:
+      - songs
+  /songs/{id}:
+    delete:
+      description: 根据ID删除歌曲
+      parameters:
+      - description: 歌曲ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 删除歌曲
+      tags:
+      - songs
+    get:
+      description: 根据ID获取歌曲详情
+      parameters:
+      - description: 歌曲ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Song'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 获取单个歌曲
+      tags:
+      - songs
+    put:
+      consumes:
+      - application/json
+      description: 根据ID更新歌曲信息
+      parameters:
+      - description: 歌曲ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 歌曲信息
+        in: body
+        name: song
+        required: true
+        schema:
+          $ref: '#/definitions/models.SongForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 更新歌曲
+      tags:
+      - songs
+  /teams:
+    get:
+      description: 获取所有团队，支持分页
+      parameters:
+      - description: 每页数量
+        in: query
+        name: limit
+        type: integer
+      - description: 偏移量
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/utils.ApiRes'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.ApiRes'
+      summary: 获取所有团队
+      tags:
+      - teams
+  /teams/{id}:
+    get:
+      description: 根据ID获取团队详情
+      parameters:
+      - description: 团队ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Team'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 获取单个团队
+      tags:
+      - teams
+swagger: "2.0"

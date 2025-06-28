@@ -10,12 +10,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-/**
- * @description: 获取所有歌曲
- * @param {*gin.Context} c
- * @return {*}
- */
-// @router /songs [get]
+// @Summary 获取所有歌曲
+// @Description 获取所有歌曲，支持分页
+// @Tags songs
+// @Produce json
+// @Param limit query int false "每页数量"
+// @Param offset query int false "偏移量"
+// @Success 200 {object} utils.ListResponse
+// @Failure 500 {object} utils.BusinessError
+// @Router /songs [get]
 func GetAllSongs(c *gin.Context) {
 	// 1. 参数解析与校验
 	limit, offset, isAbort := utils.GetPaginationQuery(c)
@@ -60,12 +63,17 @@ func GetAllSongs(c *gin.Context) {
 	})
 }
 
-/**
- * @description: 创建歌曲
- * @param {*gin.Context} c
- * @return {*}
- */
-// @router /songs [post]
+// @Summary 创建歌曲
+// @Description 创建一首新歌
+// @Tags songs
+// @Accept json
+// @Produce json
+// @Param song body models.SongForm true "歌曲信息"
+// @Success 201 {object} models.Song
+// @Failure 400 {object} utils.BusinessError
+// @Failure 404 {object} utils.BusinessError
+// @Failure 500 {object} utils.BusinessError
+// @Router /songs [post]
 func CreateSong(c *gin.Context) {
 	// 绑定请求数据
 	var createReq models.SongForm
@@ -120,12 +128,14 @@ func CreateSong(c *gin.Context) {
 	)
 }
 
-/**
- * @description: 获取单个歌曲
- * @param {*gin.Context} c
- * @return {*}
- */
-// @router /songs/:id [get]
+// @Summary 获取单个歌曲
+// @Description 根据ID获取歌曲详情
+// @Tags songs
+// @Produce json
+// @Param id path int true "歌曲ID"
+// @Success 200 {object} models.Song
+// @Failure 404 {object} utils.BusinessError
+// @Router /songs/{id} [get]
 func GetSongByID(c *gin.Context) {
 	id := c.Param("id")
 
@@ -143,12 +153,18 @@ func GetSongByID(c *gin.Context) {
 	utils.Success(c, http.StatusOK, utils.OK, song)
 }
 
-/**
- * @description: 更新歌曲
- * @param {*gin.Context} c
- * @return {*}
- */
-// @router /songs/:id [put]
+// @Summary 更新歌曲
+// @Description 根据ID更新歌曲信息
+// @Tags songs
+// @Accept json
+// @Produce json
+// @Param id path int true "歌曲ID"
+// @Param song body models.SongForm true "歌曲信息"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} utils.BusinessError
+// @Failure 404 {object} utils.BusinessError
+// @Failure 500 {object} utils.BusinessError
+// @Router /songs/{id} [put]
 func UpdateSong(c *gin.Context) {
 	// 1. 获取 ID 参数
 	id := c.Param("id")
@@ -191,12 +207,14 @@ func UpdateSong(c *gin.Context) {
 	utils.Success(c, http.StatusOK, utils.OK, gin.H{"message": "Song updated successfully"})
 }
 
-/**
- * @description: 删除歌曲
- * @param {*gin.Context} c
- * @return {*}
- */
-// @router /songs/:id [delete]
+// @Summary 删除歌曲
+// @Description 根据ID删除歌曲
+// @Tags songs
+// @Produce json
+// @Param id path int true "歌曲ID"
+// @Success 200 {object} map[string]string
+// @Failure 500 {object} utils.BusinessError
+// @Router /songs/{id} [delete]
 func DeleteSong(c *gin.Context) {
 	// 1. 获取 ID 参数
 	id := c.Param("id")
@@ -215,12 +233,17 @@ func DeleteSong(c *gin.Context) {
 	utils.Success(c, http.StatusOK, utils.Deleted, gin.H{"message": "Song deleted successfully"})
 }
 
-/**
- * @description: 获取专辑下的所有歌曲
- * @param {*gin.Context} c
- * @return {*}
- */
-// @router /albums/:id/songs [get]
+// @Summary 获取专辑下的所有歌曲
+// @Description 根据专辑ID获取该专辑下的所有歌曲，支持分页
+// @Tags songs
+// @Produce json
+// @Param id path int true "专辑ID"
+// @Param limit query int false "每页数量"
+// @Param offset query int false "偏移量"
+// @Success 200 {object} utils.ListResponse
+// @Failure 404 {object} utils.BusinessError
+// @Failure 500 {object} utils.BusinessError
+// @Router /albums/{id}/songs [get]
 func GetSongsByAlbumID(c *gin.Context) {
 	// 1. 获取专辑 ID
 	albumID := c.Param("id")

@@ -10,12 +10,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-/**
- * @description: 获取所有专辑信息
- * @param {*gin.Context} c
- * @return {*}
- */
-// @router /albums [get]
+// @Summary 获取所有专辑信息
+// @Description 获取所有专辑信息，支持分页
+// @Tags albums
+// @Produce json
+// @Param limit query int false "每页数量"
+// @Param offset query int false "偏移量"
+// @Success 200 {object} utils.ApiRes
+// @Failure 500 {object} utils.ApiRes
+// @Router /albums [get]
 func GetAllAlbums(c *gin.Context) {
 	// 1. 参数解析与校验
 	limit, offset, isAbort := utils.GetPaginationQuery(c)
@@ -58,12 +61,16 @@ func GetAllAlbums(c *gin.Context) {
 	})
 }
 
-/**
- * @description: 创建专辑信息
- * @param {*gin.Context} c
- * @return {*}
- */
-// @router /albums [post]
+// @Summary 创建专辑信息
+// @Description 创建一个新的专辑
+// @Tags albums
+// @Accept json
+// @Produce json
+// @Param album body models.AlbumForm true "专辑信息"
+// @Success 201 {object} models.Album
+// @Failure 400 {object} utils.BusinessError
+// @Failure 500 {object} utils.BusinessError
+// @Router /albums [post]
 func CreateAlbum(c *gin.Context) {
 	// 绑定请求数据
 	var createReq models.AlbumForm
@@ -106,11 +113,14 @@ func CreateAlbum(c *gin.Context) {
 	)
 }
 
-/**
- * @description: 获取单个专辑信息
- * @param {*gin.Context} c
- * @return {*}
- */
+// @Summary 获取单个专辑信息
+// @Description 根据ID获取专辑详情
+// @Tags albums
+// @Produce json
+// @Param id path int true "专辑ID"
+// @Success 200 {object} models.Album
+// @Failure 404 {object} utils.BusinessError
+// @Router /albums/{id} [get]
 func GetAlbumByID(c *gin.Context) {
 	id := c.Param("id")
 
@@ -129,12 +139,17 @@ func GetAlbumByID(c *gin.Context) {
 	utils.Success(c, http.StatusOK, utils.OK, album)
 }
 
-/**
- * @description: 更新专辑信息
- * @param {*gin.Context} c
- * @return {*}
- */
-// @router /albums/:id [put]
+// @Summary 更新专辑信息
+// @Description 根据ID更新专辑信息
+// @Tags albums
+// @Accept json
+// @Produce json
+// @Param id path int true "专辑ID"
+// @Param album body models.AlbumForm true "专辑信息"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} utils.BusinessError
+// @Failure 500 {object} utils.BusinessError
+// @Router /albums/{id} [put]
 func UpdateAlbum(c *gin.Context) {
 	// 1. 获取 ID 参数
 	id := c.Param("id")
@@ -165,12 +180,14 @@ func UpdateAlbum(c *gin.Context) {
 	utils.Success(c, http.StatusOK, utils.OK, gin.H{"message": "Album updated successfully"})
 }
 
-/**
- * @description: 删除专辑信息
- * @param {*gin.Context} c
- * @return {*}
- */
-// @router /albums/:id [delete]
+// @Summary 删除专辑信息
+// @Description 根据ID删除专辑
+// @Tags albums
+// @Produce json
+// @Param id path int true "专辑ID"
+// @Success 200 {object} map[string]string
+// @Failure 500 {object} utils.BusinessError
+// @Router /albums/{id} [delete]
 func DeleteAlbum(c *gin.Context) {
 	// 1. 获取 ID 参数
 	id := c.Param("id")
@@ -189,12 +206,15 @@ func DeleteAlbum(c *gin.Context) {
 	utils.Success(c, http.StatusOK, utils.Deleted, gin.H{"message": "Album deleted successfully"})
 }
 
-/**
- * @description: 搜索专辑信息
- * @param {*gin.Context} c
- * @return {*}
- */
-// @router /albums/search [get]
+// @Summary 搜索专辑信息
+// @Description 根据作者名称模糊搜索专辑
+// @Tags albums
+// @Produce json
+// @Param author query string true "作者名称"
+// @Success 200 {array} models.Album
+// @Failure 400 {object} utils.BusinessError
+// @Failure 500 {object} utils.BusinessError
+// @Router /albums/search [get]
 func SearchAlbums(c *gin.Context) {
 	// 1. 获取查询参数
 	query := c.Query("author")

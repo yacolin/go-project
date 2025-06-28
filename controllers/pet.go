@@ -10,12 +10,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-/**
- * @description: 获取所有专辑信息
- * @param {*gin.Context} c
- * @return {*}
- */
-// @router /albums [get]
+// @Summary 获取所有宠物
+// @Description 获取所有宠物，支持分页
+// @Tags pets
+// @Produce json
+// @Param limit query int false "每页数量"
+// @Param offset query int false "偏移量"
+// @Success 200 {object} utils.ApiRes
+// @Failure 500 {object} utils.ApiRes
+// @Router /pets [get]
 func GetAllPets(c *gin.Context) {
 	// 1. 参数解析与校验
 	limit, offset, isAbort := utils.GetPaginationQuery(c)
