@@ -70,6 +70,19 @@
 
 ## API 文档
 
+本项目集成了 [Swagger](https://swagger.io/) 自动化接口文档。  
+生成的接口文档位于 `docs/` 文件夹，启动服务后可通过浏览器访问：
+
+- [http://localhost:8080/swagger/index.html](http://localhost:8080/swagger/index.html)
+
+如需重新生成文档，可运行：
+
+```bash
+swag init
+```
+
+> 该命令会自动扫描带有 Swagger 注释的 Go 源码，并在 `docs/` 目录下生成文档文件。
+
 ### 认证接口
 
 #### 用户注册
