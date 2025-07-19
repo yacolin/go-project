@@ -1,13 +1,20 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
 	"go-project/configs"
 	"go-project/models"
 	"go-project/utils"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
+)
+
+var (
+	// SongCache 歌曲相关的缓存键
+	SongCache = utils.NewCacheKeys("song")
 )
 
 // @Summary 获取所有歌曲
@@ -34,18 +41,43 @@ func GetAllSongs(c *gin.Context) {
 
 	baseQuery := configs.DB.Model(&models.Song{})
 
-	// 获取数据总数
-	if err := baseQuery.Count(&count).Error; err != nil {
-		c.Error(utils.NewBusinessError(
-			utils.DBQuery,
-			http.StatusInternalServerError,
-			gin.H{"operation": "query_songs"},
-			fmt.Errorf("查询总计失败：%w", err),
-		))
-		return
+	// 3.1 获取数据总数缓存
+	totalStr, err := configs.GetCache(SongCache.TotalKey)
+	if err == nil {
+		// 缓存命中，解析总数
+		count, _ = strconv.ParseInt(totalStr, 10, 64)
+	} else {
+
+		// 获取数据总数
+		if err := baseQuery.Count(&count).Error; err != nil {
+			c.Error(utils.NewBusinessError(
+				utils.DBQuery,
+				http.StatusInternalServerError,
+				gin.H{"operation": "query_songs"},
+				fmt.Errorf("查询总计失败：%w", err),
+			))
+			return
+		}
+
+		// 设置总数缓存，过期时间5分钟
+		_ = configs.SetCache(SongCache.TotalKey, fmt.Sprintf("%d", count), utils.DefaultCacheTime)
 	}
 
-	// 获取分页数据
+	// 3.2 尝试获取分页数据缓存
+	listCacheKey := utils.GenListCacheKey(SongCache.ListPrefix, limit, offset)
+	listCache, err := configs.GetCache(listCacheKey)
+	if err == nil {
+		// 缓存命中，解析数据
+		if err := json.Unmarshal([]byte(listCache), &songs); err == nil {
+			utils.Success(c, http.StatusOK, utils.OK, utils.ListResponse{
+				List:  songs,
+				Total: count,
+			})
+			return
+		}
+	}
+
+	// 3.3 缓存未命中或解析失败，从数据库查询
 	if err := baseQuery.Limit(limit).Offset(offset).Find(&songs).Error; err != nil {
 		c.Error(utils.NewBusinessError(
 			utils.DBQuery,
@@ -56,7 +88,12 @@ func GetAllSongs(c *gin.Context) {
 		return
 	}
 
-	// 3. 返回结果
+	// 3.4 设置分页数据缓存，过期时间5分钟
+	if listData, err := json.Marshal(songs); err == nil {
+		_ = configs.SetCache(listCacheKey, string(listData), utils.DefaultCacheTime)
+	}
+
+	// 4. 返回结果
 	utils.Success(c, http.StatusOK, utils.OK, utils.ListResponse{
 		List:  songs,
 		Total: count,
@@ -118,6 +155,9 @@ func CreateSong(c *gin.Context) {
 		))
 		return
 	}
+
+	// 清除缓存
+	utils.ClearListCache(SongCache)
 
 	// 返回创建结果
 	utils.Success(
@@ -204,6 +244,9 @@ func UpdateSong(c *gin.Context) {
 		return
 	}
 
+	// 清除缓存
+	utils.ClearListCache(SongCache)
+
 	utils.Success(c, http.StatusOK, utils.OK, gin.H{"message": "Song updated successfully"})
 }
 
@@ -229,6 +272,9 @@ func DeleteSong(c *gin.Context) {
 		))
 		return
 	}
+
+	// 清除缓存
+	utils.ClearListCache(SongCache)
 
 	utils.Success(c, http.StatusOK, utils.Deleted, gin.H{"message": "Song deleted successfully"})
 }

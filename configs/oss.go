@@ -2,6 +2,8 @@ package configs
 
 import (
 	"fmt"
+	"log"
+	"os"
 	"sync"
 
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
@@ -45,4 +47,18 @@ func InitOSS(config OSSConfig) error {
 // GetOSSBucket returns the initialized OSS bucket
 func GetOSSBucket() *oss.Bucket {
 	return ossBucket
+}
+
+// 初始化OSS配置
+func ConnectOSS() {
+	ossConfig := OSSConfig{
+		Endpoint:        os.Getenv("OSS_ENDPOINT"),
+		AccessKeyID:     os.Getenv("OSS_ACCESS_KEY_ID"),
+		AccessKeySecret: os.Getenv("OSS_ACCESS_KEY_SECRET"),
+		BucketName:      os.Getenv("OSS_BUCKET_NAME"),
+	}
+
+	if err := InitOSS(ossConfig); err != nil {
+		log.Fatalf("Failed to initialize OSS: %v", err)
+	}
 }

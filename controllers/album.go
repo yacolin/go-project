@@ -1,13 +1,20 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
 	"go-project/configs"
 	"go-project/models"
 	"go-project/utils"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
+)
+
+var (
+	// AlbumCache 专辑相关的缓存键
+	AlbumCache = utils.NewCacheKeys("album")
 )
 
 // @Summary 获取所有专辑信息
@@ -34,17 +41,42 @@ func GetAllAlbums(c *gin.Context) {
 
 	baseQuery := configs.DB.Model(&models.Album{})
 
-	// 获取数据总数
-	if err := baseQuery.Count(&count).Error; err != nil {
-		c.Error(utils.NewBusinessError(
-			utils.DBQuery,
-			http.StatusInternalServerError,
-			gin.H{"operation": "query_albums"},
-			fmt.Errorf("查询总计失败：%w", err),
-		))
+	// 3.1 获取数据总数缓存
+	totalStr, err := configs.GetCache(AlbumCache.TotalKey)
+	if err == nil {
+		// 缓存命中，解析总数
+		count, _ = strconv.ParseInt(totalStr, 10, 64)
+	} else {
+		// 如果缓存不存在，则查询数据库
+		if err := baseQuery.Count(&count).Error; err != nil {
+			c.Error(utils.NewBusinessError(
+				utils.DBQuery,
+				http.StatusInternalServerError,
+				gin.H{"operation": "query_albums"},
+				fmt.Errorf("查询总计失败：%w", err),
+			))
+			return
+		}
+
+		// 设置总数缓存，过期时间5分钟
+		_ = configs.SetCache(AlbumCache.TotalKey, fmt.Sprintf("%d", count), utils.DefaultCacheTime)
 	}
 
-	// 获取分页数据
+	// 3.2 尝试获取分页数据缓存
+	listCacheKey := utils.GenListCacheKey(AlbumCache.ListPrefix, limit, offset)
+	listCache, err := configs.GetCache(listCacheKey)
+	if err == nil {
+		// 缓存命中，解析数据
+		if err := json.Unmarshal([]byte(listCache), &albums); err == nil {
+			utils.Success(c, http.StatusOK, utils.OK, utils.ListResponse{
+				List:  albums,
+				Total: count,
+			})
+			return
+		}
+	}
+
+	// 3.3 缓存未命中或解析失败，从数据库查询
 	if err := baseQuery.Limit(limit).Offset(offset).Find(&albums).Error; err != nil {
 		c.Error(utils.NewBusinessError(
 			utils.DBQuery,
@@ -52,9 +84,15 @@ func GetAllAlbums(c *gin.Context) {
 			gin.H{"operation": "query_albums"},
 			fmt.Errorf("查询失败：%w", err),
 		))
+		return
 	}
 
-	// 3. 返回结果
+	// 3.4 设置分页数据缓存，过期时间5分钟
+	if listData, err := json.Marshal(albums); err == nil {
+		_ = configs.SetCache(listCacheKey, string(listData), utils.DefaultCacheTime)
+	}
+
+	// 4. 返回结果
 	utils.Success(c, http.StatusOK, utils.OK, utils.ListResponse{
 		List:  albums,
 		Total: count,
@@ -103,6 +141,9 @@ func CreateAlbum(c *gin.Context) {
 		))
 		return
 	}
+
+	// 清除缓存
+	utils.ClearListCache(AlbumCache)
 
 	// 返回创建结果
 	utils.Success(
@@ -177,6 +218,10 @@ func UpdateAlbum(c *gin.Context) {
 		return
 	}
 
+	// 清除缓存
+	utils.ClearListCache(AlbumCache)
+
+	// 4. 返回成功响应
 	utils.Success(c, http.StatusOK, utils.OK, gin.H{"message": "Album updated successfully"})
 }
 
@@ -203,6 +248,10 @@ func DeleteAlbum(c *gin.Context) {
 		return
 	}
 
+	// 清除缓存
+	utils.ClearListCache(AlbumCache)
+
+	// 3. 返回成功响应
 	utils.Success(c, http.StatusOK, utils.Deleted, gin.H{"message": "Album deleted successfully"})
 }
 

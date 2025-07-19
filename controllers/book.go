@@ -1,14 +1,21 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
 	"go-project/configs"
 	"go-project/models"
 	"go-project/utils"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+)
+
+var (
+	// BookCache 图书相关的缓存键
+	BookCache = utils.NewCacheKeys("book")
 )
 
 // @Summary 获取所有图书信息
@@ -35,17 +42,41 @@ func GetAllBooks(c *gin.Context) {
 
 	baseQuery := configs.DB.Model(&models.Book{})
 
-	// 获取数据总数
-	if err := baseQuery.Count(&count).Error; err != nil {
-		c.Error(utils.NewBusinessError(
-			utils.DBQuery,
-			http.StatusInternalServerError,
-			gin.H{"operation": "query_books"},
-			fmt.Errorf("查询总计失败：%w", err),
-		))
+	// 3.1 获取数据总数缓存
+	totalStr, err := configs.GetCache(BookCache.TotalKey)
+	if err == nil {
+		// 缓存命中，解析总数
+		count, _ = strconv.ParseInt(totalStr, 10, 64)
+	} else {
+		if err := baseQuery.Count(&count).Error; err != nil {
+			c.Error(utils.NewBusinessError(
+				utils.DBQuery,
+				http.StatusInternalServerError,
+				gin.H{"operation": "query_books"},
+				fmt.Errorf("查询总计失败：%w", err),
+			))
+			return
+		}
+		// 设置总数缓存，过期时间5分钟
+		_ = configs.SetCache(BookCache.TotalKey, fmt.Sprintf("%d", count), utils.DefaultCacheTime)
+
 	}
 
-	// 获取分页数据
+	// 3.2 尝试获取分页数据缓存
+	listCacheKey := utils.GenListCacheKey(AlbumCache.ListPrefix, limit, offset)
+	listCache, err := configs.GetCache(listCacheKey)
+	if err == nil {
+		// 缓存命中，解析数据
+		if err := json.Unmarshal([]byte(listCache), &books); err == nil {
+			utils.Success(c, http.StatusOK, utils.OK, utils.ListResponse{
+				List:  books,
+				Total: count,
+			})
+			return
+		}
+	}
+
+	// 3.3 缓存未命中或解析失败，从数据库查询
 	if err := baseQuery.Limit(limit).Offset(offset).Find(&books).Error; err != nil {
 		c.Error(utils.NewBusinessError(
 			utils.DBQuery,
@@ -53,6 +84,12 @@ func GetAllBooks(c *gin.Context) {
 			gin.H{"operation": "query_books"},
 			fmt.Errorf("查询失败：%w", err),
 		))
+		return
+	}
+
+	// 3.4 设置分页数据缓存，过期时间5分钟
+	if listData, err := json.Marshal(books); err == nil {
+		_ = configs.SetCache(listCacheKey, string(listData), utils.DefaultCacheTime)
 	}
 
 	// 3. 返回结果
@@ -131,6 +168,9 @@ func CreateBook(c *gin.Context) {
 		return
 	}
 
+	// 清除缓存
+	utils.ClearListCache(BookCache)
+
 	// 返回创建结果
 	utils.Success(
 		c,
@@ -173,6 +213,9 @@ func DeleteBook(c *gin.Context) {
 		))
 		return
 	}
+
+	// 清除缓存
+	utils.ClearListCache(BookCache)
 
 	utils.Success(c, http.StatusOK, utils.Deleted, gin.H{"id": id})
 }
@@ -226,6 +269,9 @@ func UpdateBook(c *gin.Context) {
 		))
 		return
 	}
+
+	// 清除缓存
+	utils.ClearListCache(BookCache)
 
 	// 返回创建结果
 	utils.Success(
