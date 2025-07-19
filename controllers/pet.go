@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"go-project/configs"
+	"go-project/constants"
 	"go-project/models"
 	"go-project/utils"
 	"net/http"
@@ -14,7 +15,7 @@ import (
 
 var (
 	// PetCache 宠物相关的缓存键
-	PetCache = utils.NewCacheKeys("pet")
+	PetCache = utils.NewCacheKeys(constants.PET)
 )
 
 // @Summary 获取所有宠物

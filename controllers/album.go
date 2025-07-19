@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"go-project/configs"
+	"go-project/constants"
 	"go-project/models"
 	"go-project/utils"
 	"net/http"
@@ -14,7 +15,7 @@ import (
 
 var (
 	// AlbumCache 专辑相关的缓存键
-	AlbumCache = utils.NewCacheKeys("album")
+	AlbumCache = utils.NewCacheKeys(constants.ALBUM)
 )
 
 // @Summary 获取所有专辑信息
@@ -117,7 +118,7 @@ func CreateAlbum(c *gin.Context) {
 		c.Error(utils.NewBusinessError(
 			utils.BadRequest,
 			http.StatusBadRequest,
-			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig("album"))},
+			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig(constants.ALBUM))},
 			fmt.Errorf("参数错误：%w", err),
 		))
 		return
@@ -171,7 +172,7 @@ func GetAlbumByID(c *gin.Context) {
 		configs.DB,
 		id,
 		&album,
-		utils.QueryOptions{ResourceName: "album"},
+		utils.QueryOptions{ResourceName: constants.ALBUM},
 	); err != nil {
 		c.Error(err)
 		return
@@ -201,7 +202,7 @@ func UpdateAlbum(c *gin.Context) {
 		c.Error(utils.NewBusinessError(
 			utils.BadRequest,
 			http.StatusBadRequest,
-			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig("album"))},
+			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig(constants.ALBUM))},
 			fmt.Errorf("参数错误：%w", err),
 		))
 		return

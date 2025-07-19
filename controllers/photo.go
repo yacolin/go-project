@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"go-project/configs"
+	"go-project/constants"
 	"go-project/models"
 	"go-project/utils"
 	"net/http"
@@ -14,7 +15,7 @@ import (
 
 var (
 	// PhotoCache 照片相关的缓存键
-	PhotoCache = utils.NewCacheKeys("photo")
+	PhotoCache = utils.NewCacheKeys(constants.PHOTO)
 )
 
 // @Summary 获取所有照片
@@ -118,7 +119,7 @@ func CreatePhoto(c *gin.Context) {
 		c.Error(utils.NewBusinessError(
 			utils.BadRequest,
 			http.StatusBadRequest,
-			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig("photo"))},
+			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig(constants.PHOTO))},
 			fmt.Errorf("参数错误：%w", err),
 		))
 		return
@@ -183,7 +184,7 @@ func GetPhotoByID(c *gin.Context) {
 		c.Error(utils.NewBusinessError(
 			utils.NotFound,
 			http.StatusNotFound,
-			gin.H{"resource": "photo"},
+			gin.H{"resource": constants.PHOTO},
 			fmt.Errorf("照片不存在：%w", err),
 		))
 		return
@@ -214,7 +215,7 @@ func UpdatePhoto(c *gin.Context) {
 		c.Error(utils.NewBusinessError(
 			utils.BadRequest,
 			http.StatusBadRequest,
-			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig("photo"))},
+			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig(constants.PHOTO))},
 			fmt.Errorf("参数错误：%w", err),
 		))
 		return
@@ -368,7 +369,7 @@ func GetPhotoComments(c *gin.Context) {
 		c.Error(utils.NewBusinessError(
 			utils.NotFound,
 			http.StatusNotFound,
-			gin.H{"resource": "photo"},
+			gin.H{"resource": constants.PHOTO},
 			fmt.Errorf("照片不存在：%w", err),
 		))
 		return

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"go-project/configs"
+	"go-project/constants"
 	"go-project/models"
 	"go-project/utils"
 	"net/http"
@@ -15,7 +16,7 @@ import (
 
 var (
 	// BookCache 图书相关的缓存键
-	BookCache = utils.NewCacheKeys("book")
+	BookCache = utils.NewCacheKeys(constants.BOOK)
 )
 
 // @Summary 获取所有图书信息
@@ -116,7 +117,7 @@ func GetBookByID(c *gin.Context) {
 		configs.DB,
 		id,
 		&book,
-		utils.QueryOptions{ResourceName: "book"},
+		utils.QueryOptions{ResourceName: constants.BOOK},
 	); err != nil {
 		c.Error(err)
 		return
@@ -142,7 +143,7 @@ func CreateBook(c *gin.Context) {
 		c.Error(utils.NewBusinessError(
 			utils.BadRequest,
 			http.StatusBadRequest,
-			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig("book"))},
+			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig(constants.BOOK))},
 			fmt.Errorf("参数错误：%w", err),
 		))
 		return
@@ -198,7 +199,7 @@ func DeleteBook(c *gin.Context) {
 		configs.DB,
 		id,
 		&book,
-		utils.QueryOptions{ResourceName: "book"},
+		utils.QueryOptions{ResourceName: constants.BOOK},
 	); err != nil {
 		c.Error(err)
 		return
@@ -241,7 +242,7 @@ func UpdateBook(c *gin.Context) {
 		configs.DB,
 		id,
 		&book,
-		utils.QueryOptions{ResourceName: "book"},
+		utils.QueryOptions{ResourceName: constants.BOOK},
 	); err != nil {
 		c.Error(err)
 		return
@@ -253,7 +254,7 @@ func UpdateBook(c *gin.Context) {
 		c.Error(utils.NewBusinessError(
 			utils.BadRequest,
 			http.StatusBadRequest,
-			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig("book"))},
+			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig(constants.BOOK))},
 			fmt.Errorf("参数错误：%w", err),
 		))
 		return

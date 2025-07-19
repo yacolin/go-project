@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"go-project/configs"
+	"go-project/constants"
 	"go-project/models"
 	"go-project/utils"
 	"net/http"
@@ -14,7 +15,7 @@ import (
 
 var (
 	// SongCache 歌曲相关的缓存键
-	SongCache = utils.NewCacheKeys("song")
+	SongCache = utils.NewCacheKeys(constants.SONG)
 )
 
 // @Summary 获取所有歌曲
@@ -119,7 +120,7 @@ func CreateSong(c *gin.Context) {
 		c.Error(utils.NewBusinessError(
 			utils.BadRequest,
 			http.StatusBadRequest,
-			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig("song"))},
+			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig(constants.SONG))},
 			fmt.Errorf("参数错误：%w", err),
 		))
 		return
@@ -184,7 +185,7 @@ func GetSongByID(c *gin.Context) {
 		c.Error(utils.NewBusinessError(
 			utils.NotFound,
 			http.StatusNotFound,
-			gin.H{"resource": "song"},
+			gin.H{"resource": constants.SONG},
 			fmt.Errorf("歌曲不存在：%w", err),
 		))
 		return
@@ -215,7 +216,7 @@ func UpdateSong(c *gin.Context) {
 		c.Error(utils.NewBusinessError(
 			utils.BadRequest,
 			http.StatusBadRequest,
-			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig("song"))},
+			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig(constants.SONG))},
 			fmt.Errorf("参数错误：%w", err),
 		))
 		return

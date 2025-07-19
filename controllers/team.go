@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"go-project/configs"
+	"go-project/constants"
 	"go-project/models"
 	"go-project/utils"
 	"net/http"
@@ -14,7 +15,7 @@ import (
 
 var (
 	// TeamCache 专辑相关的缓存键
-	TeamCache = utils.NewCacheKeys("team")
+	TeamCache = utils.NewCacheKeys(constants.TEAM)
 )
 
 // @Summary 获取所有团队
@@ -109,7 +110,7 @@ func GetTeamByID(c *gin.Context) {
 		configs.DB,
 		id,
 		&team,
-		utils.QueryOptions{ResourceName: "team"},
+		utils.QueryOptions{ResourceName: constants.TEAM},
 	); err != nil {
 		c.Error(err)
 		return
@@ -133,7 +134,7 @@ func CreateTeam(c *gin.Context) {
 		c.Error(utils.NewBusinessError(
 			utils.BadRequest,
 			http.StatusBadRequest,
-			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig("team"))},
+			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig(constants.TEAM))},
 			fmt.Errorf("参数错误：%w", err),
 		))
 		return
@@ -178,7 +179,7 @@ func UpdateTeam(c *gin.Context) {
 		c.Error(utils.NewBusinessError(
 			utils.BadRequest,
 			http.StatusBadRequest,
-			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig("team"))},
+			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig(constants.TEAM))},
 			fmt.Errorf("参数错误：%w", err),
 		))
 		return
