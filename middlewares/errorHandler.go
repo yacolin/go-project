@@ -26,7 +26,7 @@ func ErrorHandler() gin.HandlerFunc {
 			} else {
 				// 处理未知错误
 				log.Printf("System Error: %v\n", err)
-				utils.ErrorResponse(c, http.StatusInternalServerError, utils.ErrorInternal, "系统繁忙，请稍后再试")
+				utils.ErrorResponse(c, http.StatusInternalServerError, utils.ErrInternal, "系统繁忙，请稍后再试")
 			}
 		}
 	}

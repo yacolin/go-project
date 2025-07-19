@@ -25,7 +25,7 @@ func CreateComment(c *gin.Context) {
 	var createReq models.CommentForm
 	if err := c.ShouldBindJSON(&createReq); err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorBadRequest,
+			utils.BadRequest,
 			http.StatusBadRequest,
 			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig("comment"))},
 			fmt.Errorf("参数错误: %w", err),
@@ -37,7 +37,7 @@ func CreateComment(c *gin.Context) {
 	var photo models.Photo
 	if err := configs.DB.First(&photo, createReq.PhotoID).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorNotFound,
+			utils.NotFound,
 			http.StatusNotFound,
 			gin.H{"resource": "photo"},
 			fmt.Errorf("photo不存在: %w", err),
@@ -52,7 +52,7 @@ func CreateComment(c *gin.Context) {
 	}
 	if err := configs.DB.Create(&newComment).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseCreate,
+			utils.DBCreate,
 			http.StatusInternalServerError,
 			gin.H{"operation": "create_comment"},
 			fmt.Errorf("comment创建失败: %w", err),
@@ -78,7 +78,7 @@ func UpdateComment(c *gin.Context) {
 	var updateReq models.CommentForm
 	if err := c.ShouldBindJSON(&updateReq); err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorBadRequest,
+			utils.BadRequest,
 			http.StatusBadRequest,
 			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig("comment"))},
 			fmt.Errorf("参数错误: %w", err),
@@ -87,7 +87,7 @@ func UpdateComment(c *gin.Context) {
 	}
 	if err := configs.DB.Model(&models.Comment{}).Where("id = ?", id).Updates(updateReq.ToMap()).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseUpdate,
+			utils.DBUpdate,
 			http.StatusInternalServerError,
 			gin.H{"operation": "update_comment"},
 			fmt.Errorf("comment更新失败: %w", err),
@@ -109,7 +109,7 @@ func DeleteComment(c *gin.Context) {
 	id := c.Param("id")
 	if err := configs.DB.Delete(&models.Comment{}, id).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseDelete,
+			utils.DBDelete,
 			http.StatusInternalServerError,
 			gin.H{"operation": "delete_comment"},
 			fmt.Errorf("comment删除失败: %w", err),
@@ -132,7 +132,7 @@ func GetCommentsByPhotoID(c *gin.Context) {
 	var comments []models.Comment
 	if err := configs.DB.Where("photo_id = ?", photoID).Order("created_at desc").Find(&comments).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseQuery,
+			utils.DBQuery,
 			http.StatusInternalServerError,
 			gin.H{"operation": "query_comments"},
 			fmt.Errorf("查询评论失败: %w", err),

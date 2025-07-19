@@ -38,7 +38,7 @@ func GetAllBooks(c *gin.Context) {
 	// 获取数据总数
 	if err := baseQuery.Count(&count).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseQuery,
+			utils.DBQuery,
 			http.StatusInternalServerError,
 			gin.H{"operation": "query_books"},
 			fmt.Errorf("查询总计失败：%w", err),
@@ -48,7 +48,7 @@ func GetAllBooks(c *gin.Context) {
 	// 获取分页数据
 	if err := baseQuery.Limit(limit).Offset(offset).Find(&books).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseQuery,
+			utils.DBQuery,
 			http.StatusInternalServerError,
 			gin.H{"operation": "query_books"},
 			fmt.Errorf("查询失败：%w", err),
@@ -103,7 +103,7 @@ func CreateBook(c *gin.Context) {
 	var createReq models.BookForm
 	if err := c.ShouldBindJSON(&createReq); err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorBadRequest,
+			utils.BadRequest,
 			http.StatusBadRequest,
 			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig("book"))},
 			fmt.Errorf("参数错误：%w", err),
@@ -123,7 +123,7 @@ func CreateBook(c *gin.Context) {
 	// 写入数据库
 	if err := configs.DB.Create(&newBook).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseCreate,
+			utils.DBCreate,
 			http.StatusInternalServerError,
 			gin.H{"operation": "create_book"},
 			fmt.Errorf("book创建失败：%w", err),
@@ -166,7 +166,7 @@ func DeleteBook(c *gin.Context) {
 
 	if err := configs.DB.Delete(&models.Book{}, id).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseDelete,
+			utils.DBDelete,
 			http.StatusInternalServerError,
 			gin.H{"operation": "delete_book"},
 			fmt.Errorf("删除失败：%w", err),
@@ -208,7 +208,7 @@ func UpdateBook(c *gin.Context) {
 	var updateReq models.BookForm
 	if err := c.ShouldBindJSON(&updateReq); err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorBadRequest,
+			utils.BadRequest,
 			http.StatusBadRequest,
 			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig("book"))},
 			fmt.Errorf("参数错误：%w", err),
@@ -219,7 +219,7 @@ func UpdateBook(c *gin.Context) {
 	// 执行更新
 	if err := configs.DB.Model(&book).Updates(updateReq.ToMap()).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseUpdate,
+			utils.DBUpdate,
 			http.StatusInternalServerError,
 			gin.H{"operation": "update_book"},
 			fmt.Errorf("book更新失败：%w", err),
@@ -256,7 +256,7 @@ func SearchBooks(c *gin.Context) {
 	// 2. 检查是否至少提供了一个查询参数
 	if author == "" && title == "" && isbn == "" {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorBadRequest,
+			utils.BadRequest,
 			http.StatusBadRequest,
 			gin.H{"error": "至少提供一个查询参数"},
 			fmt.Errorf("查询参数缺失"),
@@ -280,7 +280,7 @@ func SearchBooks(c *gin.Context) {
 	var books []models.Book
 	if err := query.Find(&books).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseQuery,
+			utils.DBQuery,
 			http.StatusInternalServerError,
 			gin.H{"operation": "search_books"},
 			fmt.Errorf("查询失败：%w", err),

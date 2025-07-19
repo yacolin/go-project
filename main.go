@@ -109,7 +109,7 @@ func main() {
 		utils.ErrorResponse(
 			c,
 			http.StatusNotFound,
-			utils.ErrorNotFound,
+			utils.NotFound,
 			gin.H{"path": c.Request.URL.Path},
 		)
 	})

@@ -18,9 +18,9 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			c.Error(utils.NewBusinessError(
-				utils.ErrorUnauthorized,
+				utils.Unauthorized,
 				http.StatusUnauthorized,
-				gin.H{"error": utils.CodeMessages[utils.ErrorTokenNotFound]},
+				gin.H{"error": utils.CodeMessages[utils.TkNotFound]},
 				fmt.Errorf("参数错误：%w", nil),
 			))
 			c.Abort()
@@ -30,9 +30,9 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		parts := strings.SplitN(authHeader, " ", 2)
 		if !(len(parts) == 2 && parts[0] == "Bearer") {
 			c.Error(utils.NewBusinessError(
-				utils.ErrorUnauthorized,
+				utils.Unauthorized,
 				http.StatusUnauthorized,
-				gin.H{"error": utils.CodeMessages[utils.ErrorTokenInvalidFormat]},
+				gin.H{"error": utils.CodeMessages[utils.TkFormat]},
 				fmt.Errorf("参数错误：%w", nil),
 			))
 			c.Abort()
@@ -46,9 +46,9 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		})
 		if err != nil || !token.Valid {
 			c.Error(utils.NewBusinessError(
-				utils.ErrorUnauthorized,
+				utils.Unauthorized,
 				http.StatusUnauthorized,
-				gin.H{"error": utils.CodeMessages[utils.ErrorTokenInvalid]},
+				gin.H{"error": utils.CodeMessages[utils.TkInvalid]},
 				fmt.Errorf("参数错误：%w", nil),
 			))
 			c.Abort()
@@ -58,9 +58,9 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
 			c.Error(utils.NewBusinessError(
-				utils.ErrorUnauthorized,
+				utils.Unauthorized,
 				http.StatusUnauthorized,
-				gin.H{"error": utils.CodeMessages[utils.ErrorTokenInvalidClaims]},
+				gin.H{"error": utils.CodeMessages[utils.TkClaims]},
 				fmt.Errorf("参数错误：%w", nil),
 			))
 			c.Abort()
@@ -70,9 +70,9 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		userIDFloat, ok := claims["user_id"].(float64)
 		if !ok {
 			c.Error(utils.NewBusinessError(
-				utils.ErrorUnauthorized,
+				utils.Unauthorized,
 				http.StatusUnauthorized,
-				gin.H{"error": utils.CodeMessages[utils.ErrorTokenInvalidClaimsUserID]},
+				gin.H{"error": utils.CodeMessages[utils.TkUserID]},
 				fmt.Errorf("参数错误：%w", nil),
 			))
 			c.Abort()
@@ -84,7 +84,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 		var user models.User
 		if err := configs.DB.First(&user, userID).Error; err != nil {
 			c.Error(utils.NewBusinessError(
-				utils.ErrorNotFound,
+				utils.NotFound,
 				http.StatusUnauthorized,
 				// gin.H{"error": "用户不存在"},
 				nil,

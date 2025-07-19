@@ -37,7 +37,7 @@ func GetAllPhotos(c *gin.Context) {
 	// 获取数据总数
 	if err := baseQuery.Count(&count).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseQuery,
+			utils.DBQuery,
 			http.StatusInternalServerError,
 			gin.H{"operation": "query_photos"},
 			fmt.Errorf("查询总计失败：%w", err),
@@ -48,7 +48,7 @@ func GetAllPhotos(c *gin.Context) {
 	// 获取分页数据
 	if err := baseQuery.Limit(limit).Offset(offset).Find(&photos).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseQuery,
+			utils.DBQuery,
 			http.StatusInternalServerError,
 			gin.H{"operation": "query_photos"},
 			fmt.Errorf("查询失败：%w", err),
@@ -80,7 +80,7 @@ func CreatePhoto(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&createReq); err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorBadRequest,
+			utils.BadRequest,
 			http.StatusBadRequest,
 			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig("photo"))},
 			fmt.Errorf("参数错误：%w", err),
@@ -92,7 +92,7 @@ func CreatePhoto(c *gin.Context) {
 	var album models.Album
 	if err := configs.DB.First(&album, createReq.AlbumID).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorNotFound,
+			utils.NotFound,
 			http.StatusNotFound,
 			gin.H{"resource": "album"},
 			fmt.Errorf("专辑不存在：%w", err),
@@ -111,7 +111,7 @@ func CreatePhoto(c *gin.Context) {
 	// 写入数据库
 	if err := configs.DB.Create(&newPhoto).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseCreate,
+			utils.DBCreate,
 			http.StatusInternalServerError,
 			gin.H{"operation": "create_photo"},
 			fmt.Errorf("photo创建失败：%w", err),
@@ -142,7 +142,7 @@ func GetPhotoByID(c *gin.Context) {
 	var photo models.Photo
 	if err := configs.DB.First(&photo, id).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorNotFound,
+			utils.NotFound,
 			http.StatusNotFound,
 			gin.H{"resource": "photo"},
 			fmt.Errorf("照片不存在：%w", err),
@@ -173,7 +173,7 @@ func UpdatePhoto(c *gin.Context) {
 	var updateReq models.PhotoForm
 	if err := c.ShouldBindJSON(&updateReq); err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorBadRequest,
+			utils.BadRequest,
 			http.StatusBadRequest,
 			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig("photo"))},
 			fmt.Errorf("参数错误：%w", err),
@@ -185,7 +185,7 @@ func UpdatePhoto(c *gin.Context) {
 	var album models.Album
 	if err := configs.DB.First(&album, updateReq.AlbumID).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorNotFound,
+			utils.NotFound,
 			http.StatusNotFound,
 			gin.H{"resource": "album"},
 			fmt.Errorf("专辑不存在：%w", err),
@@ -196,7 +196,7 @@ func UpdatePhoto(c *gin.Context) {
 	// 4. 更新数据库
 	if err := configs.DB.Model(&models.Photo{}).Where("id = ?", id).Updates(updateReq.ToMap()).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseUpdate,
+			utils.DBUpdate,
 			http.StatusInternalServerError,
 			gin.H{"operation": "update_photo"},
 			fmt.Errorf("photo更新失败：%w", err),
@@ -222,7 +222,7 @@ func DeletePhoto(c *gin.Context) {
 	// 2. 删除数据库记录
 	if err := configs.DB.Delete(&models.Photo{}, id).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseDelete,
+			utils.DBDelete,
 			http.StatusInternalServerError,
 			gin.H{"operation": "delete_photo"},
 			fmt.Errorf("photo删除失败：%w", err),
@@ -252,7 +252,7 @@ func GetPhotosByAlbumID(c *gin.Context) {
 	var album models.Album
 	if err := configs.DB.First(&album, albumID).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorNotFound,
+			utils.NotFound,
 			http.StatusNotFound,
 			gin.H{"resource": "album"},
 			fmt.Errorf("专辑不存在：%w", err),
@@ -277,7 +277,7 @@ func GetPhotosByAlbumID(c *gin.Context) {
 	// 获取数据总数
 	if err := baseQuery.Count(&count).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseQuery,
+			utils.DBQuery,
 			http.StatusInternalServerError,
 			gin.H{"operation": "query_album_photos"},
 			fmt.Errorf("查询总计失败：%w", err),
@@ -288,7 +288,7 @@ func GetPhotosByAlbumID(c *gin.Context) {
 	// 获取分页数据
 	if err := baseQuery.Limit(limit).Offset(offset).Find(&photos).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseQuery,
+			utils.DBQuery,
 			http.StatusInternalServerError,
 			gin.H{"operation": "query_album_photos"},
 			fmt.Errorf("查询失败：%w", err),
@@ -321,7 +321,7 @@ func GetPhotoComments(c *gin.Context) {
 	var photo models.Photo
 	if err := configs.DB.First(&photo, photoID).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorNotFound,
+			utils.NotFound,
 			http.StatusNotFound,
 			gin.H{"resource": "photo"},
 			fmt.Errorf("照片不存在：%w", err),
@@ -344,7 +344,7 @@ func GetPhotoComments(c *gin.Context) {
 
 	if err := baseQuery.Count(&count).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseQuery,
+			utils.DBQuery,
 			http.StatusInternalServerError,
 			gin.H{"operation": "query_photo_comments"},
 			fmt.Errorf("查询评论总数失败：%w", err),
@@ -354,7 +354,7 @@ func GetPhotoComments(c *gin.Context) {
 
 	if err := baseQuery.Limit(limit).Offset(offset).Find(&comments).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseQuery,
+			utils.DBQuery,
 			http.StatusInternalServerError,
 			gin.H{"operation": "query_photo_comments"},
 			fmt.Errorf("查询评论失败：%w", err),

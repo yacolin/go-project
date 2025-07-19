@@ -24,10 +24,10 @@ func FindByID[T any](
 	// 参数校验
 	if id == "" {
 		return NewBusinessError(
-			ErrorParamMissingID,
+			MissingID,
 			http.StatusBadRequest,
 			gin.H{"field": "id"},
-			errors.New(CodeMessages[ErrorParamMissingID]),
+			errors.New(CodeMessages[MissingID]),
 		)
 	}
 
@@ -41,7 +41,7 @@ func FindByID[T any](
 	if err := query.First(record, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return NewBusinessError(
-				ErrorNotFound,
+				NotFound,
 				http.StatusNotFound,
 				gin.H{"resource": opts.ResourceName, "id": id},
 				fmt.Errorf("%s不存在", opts.ResourceName),
@@ -49,7 +49,7 @@ func FindByID[T any](
 		}
 
 		return NewBusinessError(
-			ErrorDatabaseQuery,
+			DBQuery,
 			http.StatusInternalServerError,
 			gin.H{"operation": "get_" + opts.ResourceName},
 			fmt.Errorf("数据库查询失败：%w", err),

@@ -36,7 +36,7 @@ func GetPaginationQuery(c *gin.Context) (limit, offset int, isAbort bool) {
 	limit, offset, err := ValidatePagination(pageStr, sizeStr)
 	if err != nil {
 		c.Error(NewBusinessError(
-			ErrorParamInvalidPagination,
+			InvalidPage,
 			http.StatusBadRequest,
 			gin.H{"fields": []string{"page", "size"}, "reason": err.Error()},
 			err,

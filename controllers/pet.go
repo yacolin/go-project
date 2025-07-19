@@ -37,7 +37,7 @@ func GetAllPets(c *gin.Context) {
 	// 获取数据总数
 	if err := baseQuery.Count(&count).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseQuery,
+			utils.DBQuery,
 			http.StatusInternalServerError,
 			gin.H{"operation": "query_pets"},
 			fmt.Errorf("查询总计失败：%w", err),
@@ -47,7 +47,7 @@ func GetAllPets(c *gin.Context) {
 	// 获取分页数据
 	if err := baseQuery.Limit(limit).Offset(offset).Find(&pets).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseQuery,
+			utils.DBQuery,
 			http.StatusInternalServerError,
 			gin.H{"operation": "query_pets"},
 			fmt.Errorf("查询失败：%w", err),

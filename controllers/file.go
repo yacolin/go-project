@@ -46,7 +46,7 @@ func GetAllFiles(c *gin.Context) {
 	// 获取数据总数
 	if err := baseQuery.Count(&count).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseQuery,
+			utils.DBQuery,
 			http.StatusInternalServerError,
 			gin.H{"operation": "query_files"},
 			fmt.Errorf("查询总计失败：%w", err),
@@ -57,7 +57,7 @@ func GetAllFiles(c *gin.Context) {
 	// 获取分页数据
 	if err := baseQuery.Limit(limit).Offset(offset).Find(&files).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseQuery,
+			utils.DBQuery,
 			http.StatusInternalServerError,
 			gin.H{"operation": "query_files"},
 			fmt.Errorf("查询失败：%w", err),
@@ -87,7 +87,7 @@ func UploadFile(c *gin.Context) {
 	file, err := c.FormFile("file")
 	if err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorBadRequest,
+			utils.BadRequest,
 			http.StatusBadRequest,
 			gin.H{"field": "file"},
 			fmt.Errorf("文件上传失败：%w", err),
@@ -98,7 +98,7 @@ func UploadFile(c *gin.Context) {
 	// 2. 验证文件类型
 	if !isImage(file) {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorBadRequest,
+			utils.BadRequest,
 			http.StatusBadRequest,
 			gin.H{"validation": "file_type"},
 			fmt.Errorf("仅支持图片文件"),
@@ -109,7 +109,7 @@ func UploadFile(c *gin.Context) {
 	// 3. 验证文件大小
 	if file.Size > MaxFileSize {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorBadRequest,
+			utils.BadRequest,
 			http.StatusBadRequest,
 			gin.H{"validation": "file_size"},
 			fmt.Errorf("文件大小超过5MB限制"),
@@ -124,7 +124,7 @@ func UploadFile(c *gin.Context) {
 	src, err := file.Open()
 	if err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorInternal,
+			utils.ErrInternal,
 			http.StatusInternalServerError,
 			gin.H{"operation": "open_file"},
 			fmt.Errorf("打开文件失败：%w", err),
@@ -137,7 +137,7 @@ func UploadFile(c *gin.Context) {
 	bucket := configs.GetOSSBucket()
 	if bucket == nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorInternal,
+			utils.ErrInternal,
 			http.StatusInternalServerError,
 			gin.H{"operation": "get_oss_bucket"},
 			fmt.Errorf("获取OSS Bucket失败"),
@@ -149,7 +149,7 @@ func UploadFile(c *gin.Context) {
 	err = bucket.PutObject(ossPath, src)
 	if err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorInternal,
+			utils.ErrInternal,
 			http.StatusInternalServerError,
 			gin.H{"operation": "upload_to_oss"},
 			fmt.Errorf("上传到OSS失败：%w", err),
@@ -173,7 +173,7 @@ func UploadFile(c *gin.Context) {
 		// 删除已上传的OSS文件
 		bucket.DeleteObject(ossPath)
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseCreate,
+			utils.DBCreate,
 			http.StatusInternalServerError,
 			gin.H{"operation": "create_file_record"},
 			fmt.Errorf("保存文件记录失败：%w", err),
@@ -202,7 +202,7 @@ func GetFileByID(c *gin.Context) {
 	var file models.File
 	if err := configs.DB.First(&file, id).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorNotFound,
+			utils.NotFound,
 			http.StatusNotFound,
 			gin.H{"resource": "file"},
 			fmt.Errorf("文件不存在：%w", err),
@@ -229,7 +229,7 @@ func DeleteFile(c *gin.Context) {
 	var file models.File
 	if err := configs.DB.First(&file, id).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorNotFound,
+			utils.NotFound,
 			http.StatusNotFound,
 			gin.H{"resource": "file"},
 			fmt.Errorf("文件不存在：%w", err),
@@ -243,7 +243,7 @@ func DeleteFile(c *gin.Context) {
 		err := bucket.DeleteObject(file.FilePath)
 		if err != nil {
 			c.Error(utils.NewBusinessError(
-				utils.ErrorInternal,
+				utils.ErrInternal,
 				http.StatusInternalServerError,
 				gin.H{"operation": "delete_oss_file"},
 				fmt.Errorf("从OSS删除文件失败：%w", err),
@@ -255,7 +255,7 @@ func DeleteFile(c *gin.Context) {
 	// 3. 删除数据库记录
 	if err := configs.DB.Delete(&file).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseDelete,
+			utils.DBDelete,
 			http.StatusInternalServerError,
 			gin.H{"operation": "delete_file_record"},
 			fmt.Errorf("删除文件记录失败：%w", err),

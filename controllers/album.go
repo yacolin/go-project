@@ -37,7 +37,7 @@ func GetAllAlbums(c *gin.Context) {
 	// 获取数据总数
 	if err := baseQuery.Count(&count).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseQuery,
+			utils.DBQuery,
 			http.StatusInternalServerError,
 			gin.H{"operation": "query_albums"},
 			fmt.Errorf("查询总计失败：%w", err),
@@ -47,7 +47,7 @@ func GetAllAlbums(c *gin.Context) {
 	// 获取分页数据
 	if err := baseQuery.Limit(limit).Offset(offset).Find(&albums).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseQuery,
+			utils.DBQuery,
 			http.StatusInternalServerError,
 			gin.H{"operation": "query_albums"},
 			fmt.Errorf("查询失败：%w", err),
@@ -77,7 +77,7 @@ func CreateAlbum(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&createReq); err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorBadRequest,
+			utils.BadRequest,
 			http.StatusBadRequest,
 			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig("album"))},
 			fmt.Errorf("参数错误：%w", err),
@@ -96,7 +96,7 @@ func CreateAlbum(c *gin.Context) {
 	// 写入数据库
 	if err := configs.DB.Create(&newAlbum).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseCreate,
+			utils.DBCreate,
 			http.StatusInternalServerError,
 			gin.H{"operation": "create_album"},
 			fmt.Errorf("album创建失败：%w", err),
@@ -158,7 +158,7 @@ func UpdateAlbum(c *gin.Context) {
 	var updateReq models.AlbumForm
 	if err := c.ShouldBindJSON(&updateReq); err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorBadRequest,
+			utils.BadRequest,
 			http.StatusBadRequest,
 			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig("album"))},
 			fmt.Errorf("参数错误：%w", err),
@@ -169,7 +169,7 @@ func UpdateAlbum(c *gin.Context) {
 	// 3. 更新数据库
 	if err := configs.DB.Model(&models.Album{}).Where("id = ?", id).Updates(updateReq.ToMap()).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseUpdate,
+			utils.DBUpdate,
 			http.StatusInternalServerError,
 			gin.H{"operation": "update_album"},
 			fmt.Errorf("album更新失败：%w", err),
@@ -195,7 +195,7 @@ func DeleteAlbum(c *gin.Context) {
 	// 2. 删除数据库记录
 	if err := configs.DB.Delete(&models.Album{}, id).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseDelete,
+			utils.DBDelete,
 			http.StatusInternalServerError,
 			gin.H{"operation": "delete_album"},
 			fmt.Errorf("album删除失败：%w", err),
@@ -220,7 +220,7 @@ func SearchAlbums(c *gin.Context) {
 	query := c.Query("author")
 	if query == "" {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorBadRequest,
+			utils.BadRequest,
 			http.StatusBadRequest,
 			gin.H{"validation": "query parameter is required"},
 			fmt.Errorf("查询参数不能为空"),
@@ -232,7 +232,7 @@ func SearchAlbums(c *gin.Context) {
 	var albums []models.Album
 	if err := configs.DB.Where("author LIKE ?", "%"+query+"%").Find(&albums).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseQuery,
+			utils.DBQuery,
 			http.StatusInternalServerError,
 			gin.H{"operation": "search_albums"},
 			fmt.Errorf("查询失败：%w", err),

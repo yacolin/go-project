@@ -26,7 +26,7 @@ func Login(c *gin.Context) {
 	var input models.LoginInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorBadRequest,
+			utils.BadRequest,
 			http.StatusBadRequest,
 			gin.H{"validation": utils.FormatValidationErrors(err, utils.GetValidationConfig("login"))},
 			fmt.Errorf("参数错误：%w", err),
@@ -37,9 +37,9 @@ func Login(c *gin.Context) {
 	var user models.User
 	if err := configs.DB.Where("username = ?", input.Username).First(&user).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorBadRequest,
+			utils.BadRequest,
 			http.StatusInternalServerError,
-			gin.H{"error": utils.CodeMessages[utils.ErrorUserNotFound]},
+			gin.H{"error": utils.CodeMessages[utils.UserNotFound]},
 			fmt.Errorf("用户不存在：%w", err),
 		))
 		return
@@ -47,9 +47,9 @@ func Login(c *gin.Context) {
 
 	if !utils.CheckPasswordHash(input.Password, user.Password) {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorBadRequest,
+			utils.BadRequest,
 			http.StatusBadRequest,
-			gin.H{"error": utils.CodeMessages[utils.ErrorParamInvalidPwd]},
+			gin.H{"error": utils.CodeMessages[utils.InvalidPwd]},
 			fmt.Errorf("密码错误：%w", nil),
 		))
 		return
@@ -59,9 +59,9 @@ func Login(c *gin.Context) {
 	// token, err := utils.GenerateToken(user.ID)
 	// if err != nil {
 	// 	c.Error(utils.NewBusinessError(
-	// 		utils.ErrorBadRequest,
+	// 		utils.BadRequest,
 	// 		http.StatusBadRequest,
-	// 		gin.H{"error": utils.CodeMessages[utils.ErrorTokenGenFailed]},
+	// 		gin.H{"error": utils.CodeMessages[utils.TkGen]},
 	// 		fmt.Errorf("生成token失败：%w", err),
 	// 	))
 	// 	return
@@ -72,9 +72,9 @@ func Login(c *gin.Context) {
 	accessToken, err := utils.GenerateAccessToken(user.ID)
 	if err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorInternal,
+			utils.ErrInternal,
 			http.StatusInternalServerError,
-			gin.H{"error": utils.CodeMessages[utils.ErrorAccessTokenGenFailed]},
+			gin.H{"error": utils.CodeMessages[utils.AccessTkGen]},
 			fmt.Errorf("生成accessToken失败：%w", err),
 		))
 		return
@@ -83,9 +83,9 @@ func Login(c *gin.Context) {
 	refreshToken, err := utils.GenerateRefreshToken(user.ID)
 	if err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorInternal,
+			utils.ErrInternal,
 			http.StatusInternalServerError,
-			gin.H{"error": utils.CodeMessages[utils.ErrorRefreshTokenGenFailed]},
+			gin.H{"error": utils.CodeMessages[utils.RefreshTkGen]},
 			fmt.Errorf("生成refreshToken失败：%w", err),
 		))
 		return
@@ -108,7 +108,7 @@ func Register(c *gin.Context) {
 	var input models.LoginInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorBadRequest,
+			utils.BadRequest,
 			http.StatusBadRequest,
 			gin.H{"register": utils.FormatValidationErrors(err, utils.GetValidationConfig("register"))},
 			fmt.Errorf("参数错误：%w", err),
@@ -120,7 +120,7 @@ func Register(c *gin.Context) {
 	var existUser models.User
 	if err := configs.DB.Where("username = ?", input.Username).First(&existUser).Error; err == nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorBadRequest,
+			utils.BadRequest,
 			http.StatusBadRequest,
 			gin.H{"register": "用户名已存在"},
 			fmt.Errorf("用户名已存在：%w", err),
@@ -132,7 +132,7 @@ func Register(c *gin.Context) {
 	hashedPassword, err := utils.HashPassword(input.Password)
 	if err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseCreate,
+			utils.DBCreate,
 			http.StatusInternalServerError,
 			gin.H{"register": "密码加密失败"},
 			fmt.Errorf("密码加密失败：%w", err),
@@ -148,7 +148,7 @@ func Register(c *gin.Context) {
 
 	if err := configs.DB.Create(&user).Error; err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorDatabaseCreate,
+			utils.DBCreate,
 			http.StatusInternalServerError,
 			gin.H{"register": "注册失败"},
 			fmt.Errorf("注册失败：%w", err),
@@ -175,7 +175,7 @@ func Refresh(c *gin.Context) {
 
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorBadRequest,
+			utils.BadRequest,
 			http.StatusBadRequest,
 			gin.H{"refresh": utils.FormatValidationErrors(err, utils.GetValidationConfig("refresh"))},
 			fmt.Errorf("参数错误：%w", err),
@@ -189,9 +189,9 @@ func Refresh(c *gin.Context) {
 
 	if err != nil || !token.Valid {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorUnauthorized,
+			utils.Unauthorized,
 			http.StatusUnauthorized,
-			gin.H{"error": utils.CodeMessages[utils.ErrorTokenInvalid]},
+			gin.H{"error": utils.CodeMessages[utils.TkInvalid]},
 			fmt.Errorf("无效的refresh token：%w", nil),
 		))
 		return
@@ -200,9 +200,9 @@ func Refresh(c *gin.Context) {
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorUnauthorized,
+			utils.Unauthorized,
 			http.StatusUnauthorized,
-			gin.H{"error": utils.CodeMessages[utils.ErrorTokenInvalidClaims]},
+			gin.H{"error": utils.CodeMessages[utils.TkClaims]},
 			fmt.Errorf("token解析失败：%w", nil),
 		))
 		return
@@ -211,9 +211,9 @@ func Refresh(c *gin.Context) {
 	userIDFloat, ok := claims["user_id"].(float64)
 	if !ok {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorUnauthorized,
+			utils.Unauthorized,
 			http.StatusUnauthorized,
-			gin.H{"error": utils.CodeMessages[utils.ErrorTokenInvalidClaimsUserID]},
+			gin.H{"error": utils.CodeMessages[utils.TkUserID]},
 			fmt.Errorf("refresh token缺少user_id：%w", nil),
 		))
 		return
@@ -224,9 +224,9 @@ func Refresh(c *gin.Context) {
 	newAccessToken, err := utils.GenerateAccessToken(userID)
 	if err != nil {
 		c.Error(utils.NewBusinessError(
-			utils.ErrorInternal,
+			utils.ErrInternal,
 			http.StatusInternalServerError,
-			gin.H{"error": utils.CodeMessages[utils.ErrorTokenGenFailed]},
+			gin.H{"error": utils.CodeMessages[utils.TkGen]},
 			fmt.Errorf("生成新的access token失败：%w", err),
 		))
 		return
