@@ -52,37 +52,57 @@ func main() {
 	v1 := r.Group("/api/v1")
 	// v1.Use(middlewares.JWTAuthMiddleware())
 	{
-		// v1.GET("/files", controllers.GetAllFiles)
-		// v1.POST("/files", controllers.UploadFile)
-		// v1.GET("/files/:id", controllers.GetFileByID)
-		// v1.DELETE("/files/:id", controllers.DeleteFile)
+		// files := v1.Group("/files")
+		// {
+		//     files.GET("", controllers.GetAllFiles)
+		//     files.POST("", controllers.UploadFile)
+		//     files.GET("/:id", controllers.GetFileByID)
+		//     files.DELETE("/:id", controllers.DeleteFile)
+		// }
 
-		v1.GET("/teams", controllers.GetAllTeams)
-		v1.GET("/team/:id", controllers.GetTeamByID)
+		teams := v1.Group("/teams")
+		{
+			teams.GET("", controllers.GetAllTeams)
+			teams.GET("/:id", controllers.GetTeamByID)
+		}
 
-		v1.GET("/books", controllers.GetAllBooks)
-		v1.GET("/books/search", controllers.SearchBooks)
-		v1.GET("/book/:id", controllers.GetBookByID)
-		v1.POST("/book", controllers.CreateBook)
-		v1.PUT("book/:id", controllers.UpdateBook)
-		v1.DELETE("/book/:id", controllers.DeleteBook)
+		books := v1.Group("/books")
+		{
+			books.GET("", controllers.GetAllBooks)
+			books.GET("/search", controllers.SearchBooks)
+			books.GET("/:id", controllers.GetBookByID)
+			books.POST("", controllers.CreateBook)
+			books.PUT("/:id", controllers.UpdateBook)
+			books.DELETE("/:id", controllers.DeleteBook)
+		}
 
-		v1.GET("/pets", controllers.GetAllPets)
+		pets := v1.Group("/pets")
+		{
+			pets.GET("", controllers.GetAllPets)
+		}
 
-		v1.GET("/albums", controllers.GetAllAlbums)
-		v1.GET("albums/search", controllers.SearchAlbums)
-		v1.GET("/album/:id", controllers.GetAlbumByID)
-		v1.POST("/album", controllers.CreateAlbum)
-		v1.PUT("/album/:id", controllers.UpdateAlbum)
-		v1.DELETE("/album/:id", controllers.DeleteAlbum)
+		albums := v1.Group("/albums")
+		{
+			albums.GET("", controllers.GetAllAlbums)
+			albums.GET("/search", controllers.SearchAlbums)
+			albums.GET("/:id", controllers.GetAlbumByID)
+			albums.POST("", controllers.CreateAlbum)
+			albums.PUT("/:id", controllers.UpdateAlbum)
+			albums.DELETE("/:id", controllers.DeleteAlbum)
+		}
 
-		v1.GET("/songs", controllers.GetAllSongs)
+		songs := v1.Group("/songs")
+		{
+			songs.GET("", controllers.GetAllSongs)
+		}
 
-		// 评论相关
-		v1.POST("/comments", controllers.CreateComment)
-		v1.PUT("/comments/:id", controllers.UpdateComment)
-		v1.DELETE("/comments/:id", controllers.DeleteComment)
-		v1.GET("/photos/:id/comments", controllers.GetCommentsByPhotoID)
+		comments := v1.Group("/comments")
+		{
+			comments.POST("", controllers.CreateComment)
+			comments.PUT("/:id", controllers.UpdateComment)
+			comments.DELETE("/:id", controllers.DeleteComment)
+			v1.GET("/photos/:id/comments", controllers.GetCommentsByPhotoID) // 这个路由比较特殊，保持原样
+		}
 	}
 
 	r.NoRoute(func(c *gin.Context) {
