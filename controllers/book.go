@@ -64,7 +64,7 @@ func GetAllBooks(c *gin.Context) {
 	}
 
 	// 3.2 尝试获取分页数据缓存
-	listCacheKey := utils.GenListCacheKey(AlbumCache.ListPrefix, limit, offset)
+	listCacheKey := utils.GenListCacheKey(BookCache.ListPrefix, limit, offset)
 	listCache, err := configs.GetCache(listCacheKey)
 	if err == nil {
 		// 缓存命中，解析数据

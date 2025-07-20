@@ -15,7 +15,7 @@ type CacheKeys struct {
 }
 
 const (
-	DefaultCacheTime = 5 * time.Minute
+	DefaultCacheTime = 360 * time.Hour // 默认缓存时间为360小时
 )
 
 // NewCacheKeys 创建新的缓存键管理器

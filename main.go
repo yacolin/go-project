@@ -95,11 +95,16 @@ func main() {
 			albums.POST("", controllers.CreateAlbum)
 			albums.PUT("/:id", controllers.UpdateAlbum)
 			albums.DELETE("/:id", controllers.DeleteAlbum)
+			albums.GET("/:id/songs", controllers.GetSongsByAlbumID) // 获取专辑下的所有歌曲
 		}
 
 		songs := v1.Group("/songs")
 		{
 			songs.GET("", controllers.GetAllSongs)
+			songs.GET("/:id", controllers.GetSongByID)
+			songs.POST("", controllers.CreateSong)
+			songs.PUT("/:id", controllers.UpdateSong)
+			songs.DELETE("/:id", controllers.DeleteSong)
 		}
 
 		comments := v1.Group("/comments")
