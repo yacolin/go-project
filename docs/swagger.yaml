@@ -250,6 +250,16 @@ definitions:
       updated_at:
         type: string
     type: object
+  models.TeamForm:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    required:
+    - description
+    - name
+    type: object
   utils.ApiRes:
     properties:
       code:
@@ -1382,7 +1392,60 @@ paths:
       summary: 获取所有团队
       tags:
       - teams
+    post:
+      consumes:
+      - application/json
+      description: 创建一个新的团队
+      parameters:
+      - description: 团队信息
+        in: body
+        name: team
+        required: true
+        schema:
+          $ref: '#/definitions/models.TeamForm'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Team'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 创建团队
+      tags:
+      - teams
   /teams/{id}:
+    delete:
+      description: 删除团队
+      parameters:
+      - description: 团队ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 删除团队
+      tags:
+      - teams
     get:
       description: 根据ID获取团队详情
       parameters:
@@ -1403,6 +1466,42 @@ paths:
           schema:
             $ref: '#/definitions/utils.BusinessError'
       summary: 获取单个团队
+      tags:
+      - teams
+    put:
+      consumes:
+      - application/json
+      description: 更新团队信息
+      parameters:
+      - description: 团队ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: 团队信息
+        in: body
+        name: team
+        required: true
+        schema:
+          $ref: '#/definitions/models.TeamForm'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/utils.BusinessError'
+      summary: 更新团队
       tags:
       - teams
 swagger: "2.0"
